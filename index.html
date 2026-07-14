@@ -918,6 +918,49 @@
                 </div>
               </div>
             </div>
+            <!-- Sizes & Colors Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-sand/40 pt-6">
+              <!-- Sizes Configurator -->
+              <div class="space-y-4">
+                <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Sizes Configuration</h3>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="text-[9px] font-bold text-slate mb-1 block">Width (mm)</label>
+                    <input type="number" id="size-width" placeholder="Width" class="w-full px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-medium focus:outline-none focus:border-flame">
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate mb-1 block">Height (mm)</label>
+                    <input type="number" id="size-height" placeholder="Height" class="w-full px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-medium focus:outline-none focus:border-flame">
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate mb-1 block">Name (Optional)</label>
+                    <input type="text" id="size-name" placeholder="e.g. A4" class="w-full px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-medium focus:outline-none focus:border-flame">
+                  </div>
+                </div>
+                <button type="button" onclick="handleAddSize()" id="btn-add-size" class="w-full py-2 bg-charcoal hover:bg-flame text-cream font-bold text-xs rounded-lg transition">Add Size</button>
+                <div id="product-sizes-list" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+              </div>
+
+              <!-- Colors Configurator -->
+              <div class="space-y-4">
+                <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Colors Configuration</h3>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[9px] font-bold text-slate mb-1 block">Color Name</label>
+                    <input type="text" id="color-name" placeholder="e.g. Black" class="w-full px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-medium focus:outline-none focus:border-flame">
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate mb-1 block">Color Value</label>
+                    <div class="flex gap-2">
+                      <input type="color" id="color-picker" value="#000000" class="w-10 h-8 p-0 bg-transparent border-0 cursor-pointer">
+                      <input type="text" id="color-hex" placeholder="#000000" value="#000000" class="w-full px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-medium focus:outline-none focus:border-flame">
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onclick="handleAddColor()" id="btn-add-color" class="w-full py-2 bg-charcoal hover:bg-flame text-cream font-bold text-xs rounded-lg transition">Add Color</button>
+                <div id="product-colors-list" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
             <p class="text-[10px] text-flame font-bold mt-2"><i data-lucide="wand-2" class="w-3 h-3 inline"></i> AI will automatically remove the background from your Frame image upon upload!</p>
             <button type="submit" class="w-full btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
               <i data-lucide="plus-circle" class="w-5 h-5"></i> Add Product Template
@@ -2711,14 +2754,16 @@
         addProductForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           
-          const name = document.getElementById('product-name').value;
+          const name = document.getElementById('product-name').value.trim();
           const price = parseFloat(document.getElementById('product-price').value);
           const tax = parseFloat(document.getElementById('product-tax').value || 0);
           
           const frameFile = document.getElementById('product-frame-img').files[0];
           const bgFile = document.getElementById('product-bg-img').files[0];
 
-          if(!frameFile || !bgFile) {
+          const isEditing = (editingProductId !== null);
+
+          if(!isEditing && (!frameFile || !bgFile)) {
             showToast("Please upload both a Frame and a Background image!");
             return;
           }
@@ -2730,43 +2775,79 @@
           lucide.createIcons();
           
           try {
-            showToast('AI is removing the frame background...');
-            // 1. Run Frame through Remove.bg API
-            const apiKey = "MVqFJ98Cdkzs8viUodmvdnZw"; 
-            const formData = new FormData();
-            formData.append('image_file', frameFile);
-            formData.append('size', 'auto');
-            
-            const removeBgRes = await fetch('https://api.remove.bg/v1.0/removebg', {
-                method: 'POST', headers: { 'X-Api-Key': apiKey }, body: formData
-            });
-            if (!removeBgRes.ok) throw new Error("AI BG Removal failed.");
-            const transparentFrameBlob = await removeBgRes.blob();
+            let frameUrl = null;
+            let bgUrl = null;
 
-            showToast('Uploading layers to Cloudinary...');
-            // 2. Upload both the transparent frame and the raw background
-            const frameUrl = await uploadToCloudinary(transparentFrameBlob);
-            const bgUrl = await uploadToCloudinary(bgFile);
-            
-            // 3. Save as smart template
-            await db.collection('products').add({
-              name,
-              price,
-              taxRate: tax,
-              frameImage: frameUrl,
-              bgImage: bgUrl,
-              images: [frameUrl], // Fallback for safety
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            showToast('Smart Product template added successfully!');
-            addProductForm.reset();
-            document.getElementById('frame-img-text').textContent = 'Upload Frame';
-            document.getElementById('bg-img-text').textContent = 'Upload Background';
+            if (isEditing) {
+                const product = productTemplates.find(p => p.id === editingProductId);
+                if (product) {
+                    frameUrl = product.frameImage;
+                    bgUrl = product.bgImage;
+                }
+            }
+
+            if (frameFile) {
+                showToast('AI is removing the frame background...');
+                // 1. Run Frame through Remove.bg API
+                const apiKey = "MVqFJ98Cdkzs8viUodmvdnZw"; 
+                const formData = new FormData();
+                formData.append('image_file', frameFile);
+                formData.append('size', 'auto');
+                
+                const removeBgRes = await fetch('https://api.remove.bg/v1.0/removebg', {
+                    method: 'POST', headers: { 'X-Api-Key': apiKey }, body: formData
+                });
+                if (!removeBgRes.ok) throw new Error("AI BG Removal failed.");
+                const transparentFrameBlob = await removeBgRes.blob();
+
+                showToast('Uploading frame layer to Cloudinary...');
+                frameUrl = await uploadToCloudinary(transparentFrameBlob);
+            }
+
+            if (bgFile) {
+                showToast('Uploading background layer to Cloudinary...');
+                bgUrl = await uploadToCloudinary(bgFile);
+            }
+
+            if (isEditing) {
+                await db.collection('products').doc(editingProductId).update({
+                  name,
+                  price,
+                  taxRate: tax,
+                  frameImage: frameUrl,
+                  bgImage: bgUrl,
+                  images: [frameUrl], // Fallback for safety
+                  sizes: tempProductSizes,
+                  colors: tempProductColors,
+                  updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('Product template updated successfully!');
+                window.cancelProductEdit();
+            } else {
+                await db.collection('products').add({
+                  name,
+                  price,
+                  taxRate: tax,
+                  frameImage: frameUrl,
+                  bgImage: bgUrl,
+                  images: [frameUrl], // Fallback for safety
+                  sizes: tempProductSizes,
+                  colors: tempProductColors,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('Smart Product template added successfully!');
+                addProductForm.reset();
+                tempProductSizes = [];
+                tempProductColors = [];
+                renderTempSizesList();
+                renderTempColorsList();
+                document.getElementById('frame-img-text').textContent = 'Upload Frame';
+                document.getElementById('bg-img-text').textContent = 'Upload Background';
+            }
             await loadProductTemplates();
           } catch (error) {
-            console.error('Error adding product:', error);
-            showToast('Error adding product: ' + error.message);
+            console.error('Error processing product:', error);
+            showToast('Error processing product: ' + error.message);
           } finally {
             btn.innerHTML = originalBtnHtml;
             btn.disabled = false;
@@ -2870,10 +2951,227 @@
       }
     }
     
-    function editProduct(productId) {
-      // Implement edit functionality
-      showToast('Edit functionality coming soon');
+    window.handleAddSize = () => {
+        const widthInput = document.getElementById('size-width');
+        const heightInput = document.getElementById('size-height');
+        const nameInput = document.getElementById('size-name');
+
+        const width = parseInt(widthInput.value, 10);
+        const height = parseInt(heightInput.value, 10);
+        const name = nameInput.value.trim();
+
+        if (isNaN(width) || width <= 0) {
+            showToast("Please enter a valid width greater than 0");
+            return;
+        }
+        if (isNaN(height) || height <= 0) {
+            showToast("Please enter a valid height greater than 0");
+            return;
+        }
+
+        const sizeObj = { width, height, name };
+
+        if (editingSizeIndex !== null) {
+            tempProductSizes[editingSizeIndex] = sizeObj;
+            editingSizeIndex = null;
+            document.getElementById('btn-add-size').innerText = "Add Size";
+        } else {
+            tempProductSizes.push(sizeObj);
+        }
+
+        widthInput.value = "";
+        heightInput.value = "";
+        nameInput.value = "";
+
+        renderTempSizesList();
+    };
+
+    function renderTempSizesList() {
+        const listContainer = document.getElementById('product-sizes-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = tempProductSizes.map((size, idx) => `
+            <div class="flex items-center justify-between bg-editorbg p-2 rounded-lg border border-sand/40 text-xs">
+                <span class="font-semibold text-charcoal">
+                    ${size.name ? size.name + ' : ' : ''}${size.width} x ${size.height} mm
+                </span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="editTempSize(${idx})" class="text-slate hover:text-flame transition"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                    <button type="button" onclick="deleteTempSize(${idx})" class="text-slate hover:text-red-500 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
     }
+
+    window.editTempSize = (idx) => {
+        const size = tempProductSizes[idx];
+        if (!size) return;
+        document.getElementById('size-width').value = size.width;
+        document.getElementById('size-height').value = size.height;
+        document.getElementById('size-name').value = size.name || '';
+        editingSizeIndex = idx;
+        document.getElementById('btn-add-size').innerText = "Save Size";
+    };
+
+    window.deleteTempSize = (idx) => {
+        tempProductSizes.splice(idx, 1);
+        if (editingSizeIndex === idx) {
+            editingSizeIndex = null;
+            document.getElementById('btn-add-size').innerText = "Add Size";
+        } else if (editingSizeIndex > idx) {
+            editingSizeIndex--;
+        }
+        renderTempSizesList();
+    };
+
+    window.handleAddColor = () => {
+        const nameInput = document.getElementById('color-name');
+        const hexInput = document.getElementById('color-hex');
+
+        const name = nameInput.value.trim();
+        const hex = hexInput.value.trim();
+
+        if (!name) {
+            showToast("Color name cannot be empty");
+            return;
+        }
+
+        const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
+        if (!hexRegex.test(hex)) {
+            showToast("Please enter a valid Hex color code (e.g. #FFFFFF)");
+            return;
+        }
+
+        const duplicateIndex = tempProductColors.findIndex(c => c.value.toLowerCase() === hex.toLowerCase());
+        if (duplicateIndex !== -1 && duplicateIndex !== editingColorIndex) {
+            showToast("This color code is already added!");
+            return;
+        }
+
+        const colorObj = { name, value: hex };
+
+        if (editingColorIndex !== null) {
+            tempProductColors[editingColorIndex] = colorObj;
+            editingColorIndex = null;
+            document.getElementById('btn-add-color').innerText = "Add Color";
+        } else {
+            tempProductColors.push(colorObj);
+        }
+
+        nameInput.value = "";
+        hexInput.value = "#000000";
+        document.getElementById('color-picker').value = "#000000";
+
+        renderTempColorsList();
+    };
+
+    function renderTempColorsList() {
+        const listContainer = document.getElementById('product-colors-list');
+        if (!listContainer) return;
+
+        listContainer.innerHTML = tempProductColors.map((color, idx) => `
+            <div class="flex items-center justify-between bg-editorbg p-2 rounded-lg border border-sand/40 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="w-4 h-4 rounded-full border border-sand/60 block" style="background-color: ${color.value};"></span>
+                    <span class="font-semibold text-charcoal">${color.name} (${color.value})</span>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="editTempColor(${idx})" class="text-slate hover:text-flame transition"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                    <button type="button" onclick="deleteTempColor(${idx})" class="text-slate hover:text-red-500 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    window.editTempColor = (idx) => {
+        const color = tempProductColors[idx];
+        if (!color) return;
+        document.getElementById('color-name').value = color.name;
+        document.getElementById('color-hex').value = color.value;
+        document.getElementById('color-picker').value = color.value;
+        editingColorIndex = idx;
+        document.getElementById('btn-add-color').innerText = "Save Color";
+    };
+
+    window.deleteTempColor = (idx) => {
+        tempProductColors.splice(idx, 1);
+        if (editingColorIndex === idx) {
+            editingColorIndex = null;
+            document.getElementById('btn-add-color').innerText = "Add Color";
+        } else if (editingColorIndex > idx) {
+            editingColorIndex--;
+        }
+        renderTempColorsList();
+    };
+
+    window.editProduct = (productId) => {
+        const product = productTemplates.find(p => p.id === productId);
+        if (!product) {
+            showToast("Product not found");
+            return;
+        }
+
+        document.getElementById('product-name').value = product.name || '';
+        document.getElementById('product-price').value = product.price || '';
+        document.getElementById('product-tax').value = product.taxRate || 0;
+
+        tempProductSizes = product.sizes ? [...product.sizes] : [];
+        tempProductColors = product.colors ? [...product.colors] : [];
+        editingSizeIndex = null;
+        editingColorIndex = null;
+
+        renderTempSizesList();
+        renderTempColorsList();
+
+        document.getElementById('frame-img-text').textContent = 'Keep existing Frame';
+        document.getElementById('bg-img-text').textContent = 'Keep existing Background';
+
+        editingProductId = productId;
+
+        const submitBtn = document.querySelector('#add-product-form button[type="submit"]');
+        submitBtn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Update Product Template`;
+        
+        let cancelBtn = document.getElementById('btn-cancel-edit-product');
+        if (!cancelBtn) {
+            cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.id = 'btn-cancel-edit-product';
+            cancelBtn.className = 'w-full mt-2 bg-editorbg border border-sand py-2 rounded-xl text-charcoal font-bold hover:bg-sand/30 transition text-sm';
+            cancelBtn.innerText = "Cancel Edit";
+            cancelBtn.onclick = () => window.cancelProductEdit();
+            submitBtn.parentNode.appendChild(cancelBtn);
+        } else {
+            cancelBtn.classList.remove('hidden');
+        }
+
+        lucide.createIcons();
+        document.getElementById('add-product-form').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.cancelProductEdit = () => {
+        editingProductId = null;
+        document.getElementById('add-product-form').reset();
+        document.getElementById('frame-img-text').textContent = 'Upload Frame';
+        document.getElementById('bg-img-text').textContent = 'Upload Background';
+
+        tempProductSizes = [];
+        tempProductColors = [];
+        editingSizeIndex = null;
+        editingColorIndex = null;
+
+        renderTempSizesList();
+        renderTempColorsList();
+
+        const submitBtn = document.querySelector('#add-product-form button[type="submit"]');
+        submitBtn.innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5"></i> Add Product Template`;
+
+        const cancelBtn = document.getElementById('btn-cancel-edit-product');
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+
+        lucide.createIcons();
+    };
     
     // --- ADMIN: Settings ---
     function toggleBgOptions() {
@@ -3446,6 +3744,22 @@
         window.switchView('landing', false);
         window.history.replaceState({ view: 'landing' }, "", "#landing");
       }
+
+      // Color picker sync
+      const colorPicker = document.getElementById('color-picker');
+      const colorHex = document.getElementById('color-hex');
+      if (colorPicker && colorHex) {
+        colorPicker.addEventListener('input', (e) => {
+          colorHex.value = e.target.value.toUpperCase();
+        });
+        colorHex.addEventListener('input', (e) => {
+          const val = e.target.value.trim();
+          const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
+          if (hexRegex.test(val)) {
+            colorPicker.value = val;
+          }
+        });
+      }
     });
 
     // --- CORRECTIONS LAYER: INSTANT SINGLE-CLICK SCROLL ROUTER ---
@@ -3534,6 +3848,11 @@
     let currentProjectId = null;
     let unsubscribeAssets = null;
     let unsubscribeProducts = null;
+    let tempProductSizes = [];
+    let tempProductColors = [];
+    let editingProductId = null;
+    let editingSizeIndex = null;
+    let editingColorIndex = null;
 
     function generateId() {
         return Math.random().toString(36).substr(2, 9);
