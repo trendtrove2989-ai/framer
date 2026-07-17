@@ -57,7 +57,10 @@
       faviconUrl: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23252422'/><text x='50' y='72' font-family='Arial' font-size='68' font-weight='bold' fill='%23eb5e28' text-anchor='middle'>F</text></svg>",
       appIconUrl: "",
       footerLogoUrl: "",
-      loadingLogoUrl: ""
+      loadingLogoUrl: "",
+      hideBranding: false,
+      brandingPage: "/",
+      brandingCustomUrl: ""
     },
     seo: {
       "/": {
@@ -486,6 +489,16 @@
           }
         }
       }
+    },
+    right_action_btn: {
+      enabled: true,
+      visible: true,
+      text: "Start Creating",
+      iconUrl: "",
+      iconSource: "none",
+      page: "/dashboard",
+      customUrl: "",
+      dropdown: []
     }
   };
 
@@ -806,6 +819,13 @@
     // Render text or image logo in headers
     const logoContainers = document.querySelectorAll('.header-logo');
     logoContainers.forEach(container => {
+      if (conf.hideBranding) {
+        container.style.display = 'none';
+        return;
+      } else {
+        container.style.display = '';
+      }
+
       if (conf.type === 'image' && (conf.lightLogoUrl || conf.darkLogoUrl)) {
         // Detect if admin view (requires dark/light logo accordingly) or regular page
         const isAdmin = document.getElementById('admin-view') && !document.getElementById('admin-view').classList.contains('hidden');
@@ -814,6 +834,14 @@
       } else {
         container.innerHTML = `<h2>${conf.textPrefix || 'Frame'}<span>${conf.textSuffix || 'Craft'}</span></h2>`;
       }
+
+      // Handle custom click destination
+      const destUrl = conf.brandingCustomUrl || conf.brandingPage || '/';
+      container.style.cursor = 'pointer';
+      container.onclick = (e) => {
+        e.preventDefault();
+        window.handlePathRouting(destUrl);
+      };
     });
 
     // Footer Logo
@@ -851,6 +879,32 @@
           html += `<a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}')">${item.name}</a>`;
         }
       });
+
+      // Render Right Action Button if enabled & visible
+      const rightBtn = window.draftCustomization.right_action_btn;
+      if (rightBtn && rightBtn.enabled && rightBtn.visible) {
+        const btnUrl = rightBtn.customUrl || rightBtn.page || '/';
+        const iconHtml = rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-4 h-4 object-contain inline mr-1.5 align-middle">` : '';
+        if (rightBtn.dropdown && rightBtn.dropdown.length > 0) {
+          html += `
+            <div class="nav-dropdown-container">
+              <a href="${btnUrl}" class="dropdown-trigger flex items-center" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}')">
+                ${iconHtml}<span>${rightBtn.text}</span> <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 transition-transform duration-200"></i>
+              </a>
+              <div class="dropdown-menu">
+                ${rightBtn.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); window.closeAllDropdowns()">${d.name}</a>`).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <a href="${btnUrl}" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}')" class="flex items-center">
+              ${iconHtml}<span>${rightBtn.text}</span>
+            </a>
+          `;
+        }
+      }
+
       desktopContainer.innerHTML = html;
     }
 
@@ -873,7 +927,26 @@
           html += `<a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}'); toggleMobileMenu()" class="block text-lg font-bold text-charcoal">${item.name}</a>`;
         }
       });
-      // Append ABOUT US and footer links dynamically
+
+      // Render Mobile Right Action Button if enabled & visible
+      const rightBtn = window.draftCustomization.right_action_btn;
+      if (rightBtn && rightBtn.enabled && rightBtn.visible) {
+        const btnUrl = rightBtn.customUrl || rightBtn.page || '/';
+        const iconHtml = rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-4 h-4 object-contain inline mr-1.5 align-middle">` : '';
+        if (rightBtn.dropdown && rightBtn.dropdown.length > 0) {
+          html += `
+            <div class="space-y-3">
+              <span class="block text-xs font-bold text-slate uppercase tracking-wider">${iconHtml}${rightBtn.text}</span>
+              <div class="pl-4 space-y-3 border-l-2 border-sand/30">
+                ${rightBtn.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); toggleMobileMenu()" class="block text-sm font-semibold text-charcoal">${d.name}</a>`).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          html += `<a href="${btnUrl}" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}'); toggleMobileMenu()" class="block text-lg font-bold text-charcoal">${iconHtml}${rightBtn.text}</a>`;
+        }
+      }
+
       mobileContainer.innerHTML = html;
     }
 
@@ -1233,8 +1306,8 @@
 
     // Define dashboard page options
     const cards = [
-      { id: 'logos', name: 'Logos & App Icons', desc: 'App logos, favicon, Light/Dark configurations', type: 'logos', icon: 'image' },
-      { id: 'navigation', name: 'Header Navigation', desc: 'Custom links, ordering, dropdown items', type: 'headers', icon: 'menu' },
+      { id: 'logos', name: 'Logos & App Icons', desc: 'Favicon, Light/Dark logo assets configurations', type: 'logos', icon: 'image' },
+      { id: 'navigation', name: 'Header Customization', desc: 'Company branding, header links, action buttons', type: 'headers', icon: 'layout' },
       { id: 'social', name: 'Social Media Icons', desc: 'Facebook, Instagram, WhatsApp links', type: 'social', icon: 'share-2' },
       { id: 'contactInfo', name: 'Contact Information', desc: 'Centralized support details', type: 'contact', icon: 'contact' },
       { id: 'seo', name: 'Global SEO Metadata', desc: 'Meta tags, OG parameters', type: 'seo', icon: 'globe' },
@@ -1929,7 +2002,7 @@
     editor.classList.remove('hidden');
 
     if (specialId === 'logos') window.renderLogosEditor(editor);
-    else if (specialId === 'navigation') window.renderNavigationEditor(editor);
+    else if (specialId === 'navigation') window.renderHeaderCmsEditor(editor);
     else if (specialId === 'social') window.renderSocialEditor(editor);
     else if (specialId === 'contactInfo') window.renderContactEditor(editor);
     else if (specialId === 'seo') window.renderSeoEditor(editor);
@@ -1997,70 +2070,7 @@
 
   // 2. Header Menu Navigation List Editor
   window.renderNavigationEditor = function (container) {
-    const nav = window.draftCustomization.navigation || [];
-    let html = renderEditorHeader("Navigation Links Management", "window.renderCmsDashboard()");
-
-    html += `
-      <div class="bg-white border border-sand/40 p-6 rounded-2xl space-y-6 text-xs font-semibold text-slate">
-        <div class="flex justify-between items-center">
-          <span class="text-[10px] font-black uppercase text-slate tracking-wider">Navigation Menu Hierarchy</span>
-          <button onclick="window.addNavMenuItem()" class="bg-flame text-cream px-3 py-1.5 rounded-lg text-[10px] font-bold shadow transition flex items-center gap-1">
-            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Route
-          </button>
-        </div>
-
-        <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar" id="nav-items-sortable-list">
-          ${nav.map((item, idx) => `
-            <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3 relative group">
-              <!-- Reorder Buttons -->
-              <div class="absolute right-3 top-3 flex items-center gap-1">
-                <button onclick="window.reorderNav(${idx}, -1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
-                <button onclick="window.reorderNav(${idx}, 1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
-                <button onclick="window.deleteNav(${idx})" class="w-6 h-6 rounded bg-red-50 border border-red-100 flex items-center justify-center text-red-500 hover:bg-red-100 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3 w-[78%]">
-                <div>
-                  <label class="text-[8px] font-bold block mb-0.5 text-slate">Menu Link Name</label>
-                  <input type="text" value="${item.name}" oninput="window.updateNavField(${idx}, 'name', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg">
-                </div>
-                <div>
-                  <label class="text-[8px] font-bold block mb-0.5 text-slate">Path / URL</label>
-                  <input type="text" value="${item.url}" oninput="window.updateNavField(${idx}, 'url', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg">
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="chk-nav-${idx}" ${item.enabled ? 'checked' : ''} onchange="window.updateNavField(${idx}, 'enabled', this.checked)" class="rounded border-sand text-flame">
-                <label for="chk-nav-${idx}" class="text-[9px] font-bold text-slate cursor-pointer">Show this route (Enabled)</label>
-              </div>
-
-              <!-- Dropdown Items block -->
-              <div class="border-t border-sand/20 pt-3 space-y-2">
-                <div class="flex justify-between items-center">
-                  <span class="text-[9px] font-bold uppercase tracking-wider text-slate">Submenu Dropdown Elements</span>
-                  <button onclick="window.addNavDropdownItem(${idx})" class="text-[9px] text-flame font-bold hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-2.5 h-2.5"></i> Add Sublink</button>
-                </div>
-                ${item.dropdown && item.dropdown.length > 0 ? `
-                  <div class="space-y-2 pl-4 border-l border-sand/40">
-                    ${item.dropdown.map((sub, sIdx) => `
-                      <div class="flex items-center gap-2 bg-white/40 p-2 border border-sand/30 rounded-lg">
-                        <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateNavSubField(${idx}, ${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
-                        <input type="text" value="${sub.url}" placeholder="Sub URL" oninput="window.updateNavSubField(${idx}, ${sIdx}, 'url', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/2">
-                        <button onclick="window.deleteNavSub(${idx}, ${sIdx})" class="text-red-500 hover:text-red-700 ml-auto"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
-                      </div>
-                    `).join('')}
-                  </div>
-                ` : `<span class="text-[9px] text-slate italic block pl-4">No drop-down sublinks registered.</span>`}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-
-    container.innerHTML = html;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    window.renderHeaderCmsEditor(container);
   };
 
   // Nav actions
@@ -2632,6 +2642,401 @@
         </div>
       </div>
     `;
+  };
+
+  // ==========================================
+  // CUSTOM HEADER CMS EDITOR LAYOUT AND EVENT HANDLERS
+  // ==========================================
+  window.toggleHeaderAccordion = function (id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById(`icon-${id}`);
+    if (el) {
+      el.classList.toggle('hidden');
+      if (icon) {
+        icon.classList.toggle('rotate-180');
+      }
+    }
+  };
+
+  window.updateRightBtnField = function (key, val) {
+    if (!window.draftCustomization.right_action_btn) {
+      window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
+    }
+    window.draftCustomization.right_action_btn[key] = val;
+    
+    // Clear iconUrl if iconSource is none
+    if (key === 'iconSource' && val === 'none') {
+      window.draftCustomization.right_action_btn.iconUrl = "";
+    }
+    
+    // Sync url
+    if (key === 'page' || key === 'customUrl') {
+      window.draftCustomization.right_action_btn.url = window.draftCustomization.right_action_btn.customUrl || window.draftCustomization.right_action_btn.page || '/';
+    }
+    
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.addRightBtnDropdownItem = function () {
+    if (!window.draftCustomization.right_action_btn) {
+      window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
+    }
+    if (!window.draftCustomization.right_action_btn.dropdown) {
+      window.draftCustomization.right_action_btn.dropdown = [];
+    }
+    window.draftCustomization.right_action_btn.dropdown.push({ name: "New Sublink", url: "/", page: "/", customUrl: "" });
+    
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.updateRightBtnSubField = function (sIdx, key, val) {
+    window.draftCustomization.right_action_btn.dropdown[sIdx][key] = val;
+    if (key === 'page' || key === 'customUrl') {
+      window.draftCustomization.right_action_btn.dropdown[sIdx].url = window.draftCustomization.right_action_btn.dropdown[sIdx].customUrl || window.draftCustomization.right_action_btn.dropdown[sIdx].page || '/';
+    }
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+  };
+
+  window.deleteRightBtnSub = function (sIdx) {
+    window.draftCustomization.right_action_btn.dropdown.splice(sIdx, 1);
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.reorderRightBtnSub = function (sIdx, dir) {
+    const arr = window.draftCustomization.right_action_btn.dropdown;
+    const targetIdx = sIdx + dir;
+    if (targetIdx < 0 || targetIdx >= arr.length) return;
+    const temp = arr[sIdx];
+    arr[sIdx] = arr[targetIdx];
+    arr[targetIdx] = temp;
+    
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.reorderNavSub = function (idx, sIdx, dir) {
+    const arr = window.draftCustomization.navigation[idx].dropdown;
+    const targetIdx = sIdx + dir;
+    if (targetIdx < 0 || targetIdx >= arr.length) return;
+    const temp = arr[sIdx];
+    arr[sIdx] = arr[targetIdx];
+    arr[targetIdx] = temp;
+    
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.renderHeaderCmsEditor = function (container) {
+    const logos = window.draftCustomization.logos || {};
+    const nav = window.draftCustomization.navigation || [];
+    
+    // Ensure default settings exist for right_action_btn
+    if (!window.draftCustomization.right_action_btn) {
+      window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
+    }
+    const rightBtn = window.draftCustomization.right_action_btn;
+
+    // Migrate navigation fields for page and customUrl
+    nav.forEach(item => {
+      if (item.page === undefined) {
+        item.page = "";
+        item.customUrl = item.url || "";
+      }
+      if (item.dropdown) {
+        item.dropdown.forEach(sub => {
+          if (sub.page === undefined) {
+            sub.page = "";
+            sub.customUrl = sub.url || "";
+          }
+        });
+      }
+    });
+
+    // Migrate rightBtn sublinks
+    if (rightBtn.dropdown) {
+      rightBtn.dropdown.forEach(sub => {
+        if (sub.page === undefined) {
+          sub.page = "";
+          sub.customUrl = sub.url || "";
+        }
+      });
+    }
+
+    let html = renderEditorHeader("Header & Navigation Editor", "window.renderCmsDashboard()");
+    html += `<div class="space-y-4 text-xs font-semibold text-slate">`;
+
+    // SECTION 1: COMPANY BRANDING ACCORDION
+    const brandingPages = [
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products" },
+      { name: "About", path: "/about-us" },
+      { name: "Contact", path: "/contact" },
+      { name: "Studio (Dashboard)", path: "/dashboard" },
+      { name: "Editor", path: "/custom-frame-design" },
+      { name: "FAQ", path: "/faq" },
+      { name: "Order Tracking", path: "/order-tracking" },
+      { name: "Checkout", path: "/checkout" }
+    ];
+    
+    const brandingSelect = brandingPages.map(p => `
+      <option value="${p.path}" ${logos.brandingPage === p.path ? 'selected' : ''}>${p.name}</option>
+    `).join('');
+
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleHeaderAccordion('header-acc-branding')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Company Branding</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-header-acc-branding"></i>
+        </button>
+        <div id="header-acc-branding" class="hidden p-5 space-y-4">
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" id="chk-hide-branding" ${logos.hideBranding ? 'checked' : ''} onchange="window.setCmsValue('logos.hideBranding', this.checked)" class="rounded border-sand text-flame">
+            <label for="chk-hide-branding" class="text-xs font-bold text-charcoal cursor-pointer">Hide Company Logo/Branding Completely</label>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[9px] font-bold text-slate uppercase block mb-1">Logo Text Prefix</label>
+              <input type="text" value="${logos.textPrefix || ''}" oninput="window.setCmsValue('logos.textPrefix', this.value)" class="w-full p-2 bg-editorbg border border-sand rounded-lg text-xs">
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-slate uppercase block mb-1">Logo Text Suffix (Orange)</label>
+              <input type="text" value="${logos.textSuffix || ''}" oninput="window.setCmsValue('logos.textSuffix', this.value)" class="w-full p-2 bg-editorbg border border-sand rounded-lg text-xs">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[9px] font-bold text-slate uppercase block mb-1">Website Page Destination</label>
+              <select onchange="window.setCmsValue('logos.brandingPage', this.value)" class="w-full p-2 bg-editorbg border border-sand rounded-lg text-xs">
+                ${brandingSelect}
+              </select>
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-slate uppercase block mb-1">Custom URL Override</label>
+              <input type="text" value="${logos.brandingCustomUrl || ''}" placeholder="e.g. https://... or /custom-page" oninput="window.setCmsValue('logos.brandingCustomUrl', this.value)" class="w-full p-2 bg-editorbg border border-sand rounded-lg text-xs">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // SECTION 2: NAVIGATION BUTTONS ACCORDION
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleHeaderAccordion('header-acc-nav')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Navigation Buttons</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-header-acc-nav"></i>
+        </button>
+        <div id="header-acc-nav" class="hidden p-5 space-y-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] font-black uppercase text-slate tracking-wider">Navigation Menu Hierarchy</span>
+            <button onclick="window.addNavMenuItem()" class="bg-flame text-cream px-3 py-1.5 rounded-lg text-[10px] font-bold shadow transition flex items-center gap-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New Route
+            </button>
+          </div>
+          
+          <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+            ${nav.map((item, idx) => {
+              const pagesSelectOptions = brandingPages.map(p => `
+                <option value="${p.path}" ${item.page === p.path ? 'selected' : ''}>${p.name}</option>
+              `).join('');
+              
+              return `
+                <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3 relative group">
+                  <div class="absolute right-3 top-3 flex items-center gap-1">
+                    <button onclick="window.reorderNav(${idx}, -1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="window.reorderNav(${idx}, 1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="window.deleteNav(${idx})" class="w-6 h-6 rounded bg-red-50 border border-red-100 flex items-center justify-center text-red-500 hover:bg-red-100 ml-2"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  </div>
+                  
+                  <div class="grid grid-cols-3 gap-3 w-[78%]">
+                    <div>
+                      <label class="text-[8px] font-bold block mb-0.5 text-slate">Menu Link Name</label>
+                      <input type="text" value="${item.name}" oninput="window.updateNavField(${idx}, 'name', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                    </div>
+                    <div>
+                      <label class="text-[8px] font-bold block mb-0.5 text-slate">Select Page</label>
+                      <select onchange="window.updateNavField(${idx}, 'page', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                        <option value="">-- Custom URL --</option>
+                        ${pagesSelectOptions}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[8px] font-bold block mb-0.5 text-slate">Custom URL</label>
+                      <input type="text" value="${item.customUrl || ''}" placeholder="e.g. /custom" oninput="window.updateNavField(${idx}, 'customUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox" id="chk-nav-${idx}" ${item.enabled ? 'checked' : ''} onchange="window.updateNavField(${idx}, 'enabled', this.checked)" class="rounded border-sand text-flame">
+                    <label for="chk-nav-${idx}" class="text-[9px] font-bold text-slate cursor-pointer">Show this route (Enabled)</label>
+                  </div>
+
+                  <!-- Dropdown submenu -->
+                  <div class="border-t border-sand/20 pt-3 space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-[9px] font-bold uppercase tracking-wider text-slate">Submenu Dropdown Elements</span>
+                      <button onclick="window.addNavDropdownItem(${idx})" class="text-[9px] text-flame font-bold hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-2.5 h-2.5"></i> Add Sublink</button>
+                    </div>
+                    ${item.dropdown && item.dropdown.length > 0 ? `
+                      <div class="space-y-2 pl-4 border-l border-sand/40">
+                        ${item.dropdown.map((sub, sIdx) => {
+                          const subSelectOptions = brandingPages.map(p => `
+                            <option value="${p.path}" ${sub.page === p.path ? 'selected' : ''}>${p.name}</option>
+                          `).join('');
+                          
+                          return `
+                            <div class="bg-white/40 p-2 border border-sand/30 rounded-lg space-y-2">
+                              <div class="flex items-center gap-2">
+                                <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateNavSubField(${idx}, ${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                                <select onchange="window.updateNavSubField(${idx}, ${sIdx}, 'page', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                                  <option value="">-- Custom URL --</option>
+                                  ${subSelectOptions}
+                                </select>
+                                <input type="text" value="${sub.customUrl || ''}" placeholder="Sub Custom URL" oninput="window.updateNavSubField(${idx}, ${sIdx}, 'customUrl', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                                <button onclick="window.deleteNavSub(${idx}, ${sIdx})" class="text-red-500 hover:text-red-700 ml-auto shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                              </div>
+                              <div class="flex items-center gap-1 pl-2">
+                                <button onclick="window.reorderNavSub(${idx}, ${sIdx}, -1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-up" class="w-2.5 h-2.5"></i> Up</button>
+                                <button onclick="window.reorderNavSub(${idx}, ${sIdx}, 1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-down" class="w-2.5 h-2.5"></i> Down</button>
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    ` : `<span class="text-[9px] text-slate italic block pl-4">No drop-down sublinks registered.</span>`}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // SECTION 3: RIGHT ACTION BUTTON ACCORDION
+    const rightBtnSelectOptions = brandingPages.map(p => `
+      <option value="${p.path}" ${rightBtn.page === p.path ? 'selected' : ''}>${p.name}</option>
+    `).join('');
+    
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleHeaderAccordion('header-acc-right-btn')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Right Action Button</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-header-acc-right-btn"></i>
+        </button>
+        <div id="header-acc-right-btn" class="hidden p-5 space-y-4">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="chk-right-btn-enabled" ${rightBtn.enabled ? 'checked' : ''} onchange="window.updateRightBtnField('enabled', this.checked)" class="rounded border-sand text-flame">
+              <label for="chk-right-btn-enabled" class="text-xs font-bold text-charcoal cursor-pointer">Restore (Enabled)</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="chk-right-btn-visible" ${rightBtn.visible ? 'checked' : ''} onchange="window.updateRightBtnField('visible', this.checked)" class="rounded border-sand text-flame">
+              <label for="chk-right-btn-visible" class="text-xs font-bold text-charcoal cursor-pointer">Show (Visible)</label>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="text-[8px] font-bold block mb-0.5 text-slate">Button Text</label>
+              <input type="text" value="${rightBtn.text || ''}" oninput="window.updateRightBtnField('text', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+            </div>
+            <div>
+              <label class="text-[8px] font-bold block mb-0.5 text-slate">Select Page</label>
+              <select onchange="window.updateRightBtnField('page', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                <option value="">-- Custom URL --</option>
+                ${rightBtnSelectOptions}
+              </select>
+            </div>
+            <div>
+              <label class="text-[8px] font-bold block mb-0.5 text-slate">Custom URL</label>
+              <input type="text" value="${rightBtn.customUrl || ''}" placeholder="e.g. /custom" oninput="window.updateRightBtnField('customUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+            </div>
+          </div>
+          
+          <!-- Icon options -->
+          <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3">
+            <span class="text-[9px] font-black uppercase text-slate tracking-wider block">Button Icon Settings</span>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[8px] font-bold block mb-0.5 text-slate">Icon Method</label>
+                <select onchange="window.updateRightBtnField('iconSource', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                  <option value="none" ${rightBtn.iconSource === 'none' ? 'selected' : ''}>No Icon</option>
+                  <option value="image_url" ${rightBtn.iconSource === 'image_url' ? 'selected' : ''}>Image URL</option>
+                  <option value="upload_image" ${rightBtn.iconSource === 'upload_image' ? 'selected' : ''}>Upload Image</option>
+                </select>
+              </div>
+              
+              <div>
+                ${rightBtn.iconSource === 'image_url' ? `
+                  <label class="text-[8px] font-bold block mb-0.5 text-slate">Icon Image URL</label>
+                  <input type="text" value="${rightBtn.iconUrl || ''}" oninput="window.updateRightBtnField('iconUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                ` : ''}
+                
+                ${rightBtn.iconSource === 'upload_image' ? `
+                  <label class="text-[8px] font-bold block mb-0.5 text-slate">Upload Icon</label>
+                  <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('upload-right-btn-icon').click()" class="bg-flame text-cream px-3 py-1.5 rounded-lg text-[9px] font-bold shadow transition shrink-0">Upload File</button>
+                    <input type="file" id="upload-right-btn-icon" class="hidden" onchange="window.handleCmsImageUpload(event, 'right_action_btn.iconUrl')">
+                    ${rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-8 h-8 object-contain rounded border border-sand">` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Dropdown submenu for Right Button -->
+          <div class="border-t border-sand/20 pt-3 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate">Dropdown Submenu Links</span>
+              <button onclick="window.addRightBtnDropdownItem()" class="text-[9px] text-flame font-bold hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-2.5 h-2.5"></i> Add Sublink</button>
+            </div>
+            ${rightBtn.dropdown && rightBtn.dropdown.length > 0 ? `
+              <div class="space-y-2 pl-4 border-l border-sand/40">
+                ${rightBtn.dropdown.map((sub, sIdx) => {
+                  const subSelectOptions = brandingPages.map(p => `
+                    <option value="${p.path}" ${sub.page === p.path ? 'selected' : ''}>${p.name}</option>
+                  `).join('');
+                  
+                  return `
+                    <div class="bg-white/40 p-2 border border-sand/30 rounded-lg space-y-2">
+                      <div class="flex items-center gap-2">
+                        <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateRightBtnSubField(${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                        <select onchange="window.updateRightBtnSubField(${sIdx}, 'page', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                          <option value="">-- Custom URL --</option>
+                          ${subSelectOptions}
+                        </select>
+                        <input type="text" value="${sub.customUrl || ''}" placeholder="Sub Custom URL" oninput="window.updateRightBtnSubField(${sIdx}, 'customUrl', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
+                        <button onclick="window.deleteRightBtnSub(${sIdx})" class="text-red-500 hover:text-red-700 ml-auto shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                      </div>
+                      <div class="flex items-center gap-1 pl-2">
+                        <button onclick="window.reorderRightBtnSub(${sIdx}, -1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-up" class="w-2.5 h-2.5"></i> Up</button>
+                        <button onclick="window.reorderRightBtnSub(${sIdx}, 1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-down" class="w-2.5 h-2.5"></i> Down</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `<span class="text-[9px] text-slate italic block pl-4">No sublinks registered.</span>`}
+          </div>
+        </div>
+      </div>
+    `;
+
+    html += `</div>`; // Close space-y-4
+    container.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   };
 
 })();
