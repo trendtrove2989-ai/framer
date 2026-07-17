@@ -452,6 +452,35 @@
                 label: "Footer Copyright Text",
                 value: "© 2024 FrameCraft. All rights reserved. | Designed with ❤️ by FrameCraft Team",
                 style: {}
+              },
+              quick_links_items: {
+                type: "links",
+                label: "Quick Links Management",
+                value: [
+                  { name: "Home", page: "/", customUrl: "", color: "" },
+                  { name: "Products", page: "/products", customUrl: "", color: "" },
+                  { name: "About", page: "/about-us", customUrl: "", color: "" },
+                  { name: "Contact", page: "/contact", customUrl: "", color: "" }
+                ]
+              },
+              services_items: {
+                type: "links",
+                label: "Services Links",
+                value: [
+                  { name: "Custom Framing", page: "/dashboard", customUrl: "", color: "" },
+                  { name: "Photo Printing", page: "", customUrl: "#frames-section", color: "" },
+                  { name: "Frame Restoration", page: "", customUrl: "#contact-section", color: "" },
+                  { name: "Corporate Orders", page: "", customUrl: "#contact-section", color: "" }
+                ]
+              },
+              contact_items: {
+                type: "links",
+                label: "Contact Items",
+                value: [
+                  { name: "Address", page: "", customUrl: "", color: "", icon: "map-pin", text: "123 Artisan Street, Craft City" },
+                  { name: "Email", page: "", customUrl: "", color: "", icon: "mail", text: "hello@framecraft.com" },
+                  { name: "Phone", page: "", customUrl: "", color: "", icon: "phone", text: "+1 (555) 123-4567" }
+                ]
               }
             }
           }
@@ -728,8 +757,11 @@
     });
 
     // Special renders
-    if (pathString.startsWith('navigation')) {
+    if (pathString.startsWith('navigation') || pathString.startsWith('pages.footer')) {
       window.renderDynamicNavigation();
+      if (pathString.startsWith('pages.footer')) {
+        window.renderDynamicSocialsAndContact();
+      }
     } else if (pathString.startsWith('social') || pathString.startsWith('contactInfo')) {
       window.renderDynamicSocialsAndContact();
     } else if (pathString.startsWith('logos')) {
@@ -849,18 +881,49 @@
     const footerContainer = document.getElementById('footer-nav-links');
     if (footerContainer) {
       let html = '';
-      navItems.forEach(item => {
-        if (!item.enabled) return;
-        let displayName = item.name;
-        if (displayName.toUpperCase() === 'ABOUT US') displayName = 'About';
-        else if (displayName.toUpperCase() === 'CONTACT US') displayName = 'Contact';
-        
-        // Capitalize title-case
-        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
+      const quickLinksEl = window.draftCustomization.pages?.footer?.sections?.general?.elements?.quick_links_items;
+      if (quickLinksEl && Array.isArray(quickLinksEl.value)) {
+        quickLinksEl.value.forEach(item => {
+          const url = item.customUrl || item.page || '/';
+          const styleAttr = item.color ? `style="color: ${item.color} !important;"` : '';
+          html += `<li><a href="${url}" onclick="event.preventDefault(); window.handlePathRouting('${url}')" class="text-sand hover:text-cream transition" ${styleAttr}>${item.name}</a></li>`;
+        });
+      } else {
+        navItems.forEach(item => {
+          if (!item.enabled) return;
+          let displayName = item.name;
+          if (displayName.toUpperCase() === 'ABOUT US') displayName = 'About';
+          else if (displayName.toUpperCase() === 'CONTACT US') displayName = 'Contact';
+          
+          // Capitalize title-case
+          displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
 
-        html += `<li><a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}')" class="text-sand hover:text-cream transition">${displayName}</a></li>`;
-      });
+          html += `<li><a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}')" class="text-sand hover:text-cream transition">${displayName}</a></li>`;
+        });
+      }
       footerContainer.innerHTML = html;
+    }
+
+    // 3b. Render Footer Services Links
+    const servicesContainer = document.getElementById('footer-services-links');
+    if (servicesContainer) {
+      const servicesEl = window.draftCustomization.pages?.footer?.sections?.general?.elements?.services_items;
+      if (servicesEl && Array.isArray(servicesEl.value)) {
+        let html = '';
+        servicesEl.value.forEach(item => {
+          const url = item.customUrl || item.page || '#';
+          const styleAttr = item.color ? `style="color: ${item.color} !important;"` : '';
+          
+          let clickHandler = `onclick="event.preventDefault(); window.handlePathRouting('${url}')"`;
+          if (url.startsWith('#')) {
+            const sectionId = url.replace('#', '');
+            clickHandler = `onclick="event.preventDefault(); scrollToSection('${sectionId}')"`;
+          }
+          
+          html += `<li><a href="${url}" ${clickHandler} class="text-sand hover:text-cream transition" ${styleAttr}>${item.name}</a></li>`;
+        });
+        servicesContainer.innerHTML = html;
+      }
     }
 
     // Rebind dropdown trigger events
@@ -941,12 +1004,50 @@
     // 5. Footer Contact Info list
     const footerContact = document.querySelector('#site-footer h4[data-cms="footer.general.contact"] + ul');
     if (footerContact) {
-      const items = footerContact.querySelectorAll('li');
-      if (items.length >= 3) {
-        items[0].innerHTML = `<i data-lucide="map-pin" class="w-4 h-4 text-flame"></i> ${contact.address}`;
-        items[1].innerHTML = `<i data-lucide="mail" class="w-4 h-4 text-flame"></i> ${contact.email}`;
-        items[2].innerHTML = `<i data-lucide="phone" class="w-4 h-4 text-flame"></i> ${contact.phone}`;
+      const contactEl = window.draftCustomization.pages?.footer?.sections?.general?.elements?.contact_items;
+      if (contactEl && Array.isArray(contactEl.value)) {
+        let html = '';
+        contactEl.value.forEach(item => {
+          let textVal = item.text;
+          if (item.name === "Address" && !textVal) textVal = contact.address;
+          if (item.name === "Email" && !textVal) textVal = contact.email;
+          if (item.name === "Phone" && !textVal) textVal = contact.phone;
+
+          const colorStyle = item.color ? `style="color: ${item.color} !important;"` : '';
+          
+          let content = textVal;
+          if (item.name === "Email") {
+            const mailUrl = item.customUrl || item.page || `mailto:${textVal}`;
+            content = `<a href="${mailUrl}" class="hover:text-cream transition" ${colorStyle}>${textVal}</a>`;
+          } else if (item.name === "Phone") {
+            const telUrl = item.customUrl || item.page || `tel:${textVal}`;
+            content = `<a href="${telUrl}" class="hover:text-cream transition" ${colorStyle}>${textVal}</a>`;
+          } else {
+            const mapUrl = item.customUrl || item.page || contact.googleMapsLink;
+            if (mapUrl) {
+              content = `<a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-cream transition" ${colorStyle}>${textVal}</a>`;
+            } else {
+              content = `<span ${colorStyle}>${textVal}</span>`;
+            }
+          }
+
+          html += `
+            <li class="flex items-center gap-2" ${colorStyle}>
+              <i data-lucide="${item.icon || 'info'}" class="w-4 h-4 text-flame"></i>
+              ${content}
+            </li>
+          `;
+        });
+        footerContact.innerHTML = html;
         if (typeof lucide !== 'undefined') lucide.createIcons();
+      } else {
+        const items = footerContact.querySelectorAll('li');
+        if (items.length >= 3) {
+          items[0].innerHTML = `<i data-lucide="map-pin" class="w-4 h-4 text-flame"></i> ${contact.address}`;
+          items[1].innerHTML = `<i data-lucide="mail" class="w-4 h-4 text-flame"></i> ${contact.email}`;
+          items[2].innerHTML = `<i data-lucide="phone" class="w-4 h-4 text-flame"></i> ${contact.phone}`;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
       }
     }
   };
@@ -1230,6 +1331,13 @@
         </button>
       </div>
     `;
+
+    if (pageKey === 'footer') {
+      html += window.renderFooterCmsEditor();
+      editor.innerHTML = html;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
 
     // Render accordions for each section
     html += `<div class="space-y-4">`;
@@ -2249,6 +2357,278 @@
         <div>
           <label class="text-[9px] font-bold text-slate block mb-1">Canonical URL</label>
           <input type="text" value="${page.canonicalUrl || ''}" oninput="window.setCmsValue('${path}.canonicalUrl', this.value)" placeholder="Leave blank to default to current URL" class="w-full p-2 bg-editorbg border border-sand rounded-lg">
+        </div>
+      </div>
+    `;
+  };
+
+  // ==========================================
+  // CUSTOM FOOTER CMS EDITOR LAYOUT AND EVENT HANDLERS
+  // ==========================================
+  window.toggleFooterAccordion = function (id) {
+    const el = document.getElementById(id);
+    const icon = document.getElementById(`icon-${id}`);
+    if (el) {
+      el.classList.toggle('hidden');
+      if (icon) {
+        icon.classList.toggle('rotate-180');
+      }
+    }
+  };
+
+  window.updateFooterLinkField = function (path, index, field, value) {
+    const parts = path.split('.');
+    let cur = window.draftCustomization;
+    for (let i = 0; i < parts.length; i++) {
+      cur = cur[parts[i]];
+    }
+    if (cur && Array.isArray(cur.value)) {
+      cur.value[index][field] = value;
+      window.applyCmsPreview(path);
+      window.checkCmsDirty();
+    }
+  };
+
+  window.renderFooterCmsEditor = function () {
+    const page = window.draftCustomization.pages['footer'];
+    const general = page.sections.general;
+    const elements = general.elements;
+
+    // Ensure link configuration fields exist (backward compatibility fallback)
+    if (!elements.quick_links_items) {
+      elements.quick_links_items = clone(window.defaultCustomization.pages.footer.sections.general.elements.quick_links_items);
+    }
+    if (!elements.services_items) {
+      elements.services_items = clone(window.defaultCustomization.pages.footer.sections.general.elements.services_items);
+    }
+    if (!elements.contact_items) {
+      elements.contact_items = clone(window.defaultCustomization.pages.footer.sections.general.elements.contact_items);
+    }
+
+    let html = '<div class="space-y-4">';
+
+    // 1. Company Information Accordion
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleFooterAccordion('footer-acc-company')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Company Information</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-footer-acc-company"></i>
+        </button>
+        <div id="footer-acc-company" class="hidden p-5 space-y-6">
+          <div class="flex justify-end mb-2">
+            <button onclick="window.resetCmsScope('section', 'footer', 'general'); window.openCmsPageEditor('footer');" class="px-2 py-0.5 bg-red-50 text-red-500 hover:bg-red-100 text-[9px] font-extrabold rounded transition flex items-center gap-1">
+              <i data-lucide="rotate-ccw" class="w-2.5 h-2.5"></i> Reset Section
+            </button>
+          </div>
+    `;
+    // Render desc and copyright
+    ['desc', 'copyright'].forEach(elKey => {
+      const el = elements[elKey];
+      const path = `pages.footer.sections.general.elements.${elKey}`;
+      html += `
+        <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-4">
+          <div class="text-[10px] font-black text-slate uppercase tracking-wider">${el.label}</div>
+          <input type="text" value="${el.value || ''}" oninput="window.setCmsValue('${path}.value', this.value)" class="w-full px-3.5 py-2 bg-white border border-sand rounded-xl text-xs text-charcoal focus:outline-none focus:border-flame transition">
+          ${window.renderTypographyControls(path, el.style)}
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+
+    // 2. Quick Links Accordion
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleFooterAccordion('footer-acc-links')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Quick Links</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-footer-acc-links"></i>
+        </button>
+        <div id="footer-acc-links" class="hidden p-5 space-y-6">
+          <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-4">
+            <div class="text-[10px] font-black text-slate uppercase tracking-wider">${elements.quick_links.label}</div>
+            <input type="text" value="${elements.quick_links.value || ''}" oninput="window.setCmsValue('pages.footer.sections.general.elements.quick_links.value', this.value)" class="w-full px-3.5 py-2 bg-white border border-sand rounded-xl text-xs text-charcoal focus:outline-none focus:border-flame transition">
+            ${window.renderTypographyControls('pages.footer.sections.general.elements.quick_links', elements.quick_links.style)}
+          </div>
+          <div class="text-[10px] font-black text-slate uppercase tracking-wider px-2">Link Management</div>
+          <div class="space-y-4">
+    `;
+    elements.quick_links_items.value.forEach((item, idx) => {
+      html += window.renderFooterLinkItemEditor('pages.footer.sections.general.elements.quick_links_items', item, idx);
+    });
+    html += `</div></div></div>`;
+
+    // 3. Services Accordion
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleFooterAccordion('footer-acc-services')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Services</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-footer-acc-services"></i>
+        </button>
+        <div id="footer-acc-services" class="hidden p-5 space-y-6">
+          <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-4">
+            <div class="text-[10px] font-black text-slate uppercase tracking-wider">${elements.services.label}</div>
+            <input type="text" value="${elements.services.value || ''}" oninput="window.setCmsValue('pages.footer.sections.general.elements.services.value', this.value)" class="w-full px-3.5 py-2 bg-white border border-sand rounded-xl text-xs text-charcoal focus:outline-none focus:border-flame transition">
+            ${window.renderTypographyControls('pages.footer.sections.general.elements.services', elements.services.style)}
+          </div>
+          <div class="text-[10px] font-black text-slate uppercase tracking-wider px-2">Service Management</div>
+          <div class="space-y-4">
+    `;
+    elements.services_items.value.forEach((item, idx) => {
+      html += window.renderFooterLinkItemEditor('pages.footer.sections.general.elements.services_items', item, idx);
+    });
+    html += `</div></div></div>`;
+
+    // 4. Contact Information Accordion
+    html += `
+      <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
+        <button onclick="window.toggleFooterAccordion('footer-acc-contact')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
+          <span>Contact Information</span>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-footer-acc-contact"></i>
+        </button>
+        <div id="footer-acc-contact" class="hidden p-5 space-y-6">
+          <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-4">
+            <div class="text-[10px] font-black text-slate uppercase tracking-wider">${elements.contact.label}</div>
+            <input type="text" value="${elements.contact.value || ''}" oninput="window.setCmsValue('pages.footer.sections.general.elements.contact.value', this.value)" class="w-full px-3.5 py-2 bg-white border border-sand rounded-xl text-xs text-charcoal focus:outline-none focus:border-flame transition">
+            ${window.renderTypographyControls('pages.footer.sections.general.elements.contact', elements.contact.style)}
+          </div>
+          <div class="text-[10px] font-black text-slate uppercase tracking-wider px-2">Contact Links Management</div>
+          <div class="space-y-4">
+    `;
+    elements.contact_items.value.forEach((item, idx) => {
+      html += window.renderFooterContactItemEditor('pages.footer.sections.general.elements.contact_items', item, idx);
+    });
+    html += `</div></div></div>`;
+
+    html += '</div>';
+    return html;
+  };
+
+  window.renderFooterLinkItemEditor = function (path, item, index) {
+    const pages = [
+      { name: "-- Select Website Page --", path: "" },
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products" },
+      { name: "About", path: "/about-us" },
+      { name: "Contact", path: "/contact" },
+      { name: "Studio (Dashboard)", path: "/dashboard" },
+      { name: "Editor", path: "/custom-frame-design" },
+      { name: "FAQ", path: "/faq" },
+      { name: "Order Tracking", path: "/order-tracking" },
+      { name: "Checkout", path: "/checkout" }
+    ];
+
+    const selectOptions = pages.map(p => `
+      <option value="${p.path}" ${item.page === p.path ? 'selected' : ''}>${p.name}</option>
+    `).join('');
+
+    return `
+      <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-3">
+        <div class="flex items-center justify-between border-b border-sand/30 pb-2 mb-2">
+          <span class="text-xs font-bold text-charcoal">${item.name || 'Link ' + (index + 1)}</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Link Text</label>
+            <input type="text" value="${item.name || ''}" 
+              oninput="window.updateFooterLinkField('${path}', ${index}, 'name', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Text Color Override</label>
+            <div class="flex items-center gap-2">
+              <input type="color" value="${item.color || '#EEDFCE'}" 
+                onchange="window.updateFooterLinkField('${path}', ${index}, 'color', this.value)" 
+                class="w-8 h-8 rounded cursor-pointer border border-sand shadow-sm p-0">
+              <button onclick="window.updateFooterLinkField('${path}', ${index}, 'color', ''); this.previousElementSibling.value='#EEDFCE';" 
+                class="px-2 py-1 bg-sand/30 hover:bg-sand/50 text-[10px] font-bold rounded text-slate hover:text-charcoal transition">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Select Website Page (Option 1)</label>
+            <select onchange="window.updateFooterLinkField('${path}', ${index}, 'page', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+              ${selectOptions}
+            </select>
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Custom URL (Option 2 - Overrides Page)</label>
+            <input type="text" value="${item.customUrl || ''}" placeholder="https://... or /custom-page"
+              oninput="window.updateFooterLinkField('${path}', ${index}, 'customUrl', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  window.renderFooterContactItemEditor = function (path, item, index) {
+    const pages = [
+      { name: "-- Select Website Page --", path: "" },
+      { name: "Home", path: "/" },
+      { name: "Products", path: "/products" },
+      { name: "About", path: "/about-us" },
+      { name: "Contact", path: "/contact" },
+      { name: "Studio (Dashboard)", path: "/dashboard" },
+      { name: "Editor", path: "/custom-frame-design" },
+      { name: "FAQ", path: "/faq" },
+      { name: "Order Tracking", path: "/order-tracking" },
+      { name: "Checkout", path: "/checkout" }
+    ];
+
+    const selectOptions = pages.map(p => `
+      <option value="${p.path}" ${item.page === p.path ? 'selected' : ''}>${p.name}</option>
+    `).join('');
+
+    return `
+      <div class="p-4 bg-editorbg/40 rounded-xl border border-sand/30 space-y-3">
+        <div class="flex items-center justify-between border-b border-sand/30 pb-2 mb-2">
+          <span class="text-xs font-bold text-charcoal">${item.name || 'Contact Item ' + (index + 1)}</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Contact Label</label>
+            <input type="text" value="${item.name || ''}" disabled
+              class="w-full px-2 py-1.5 bg-sand/20 border border-sand rounded-lg text-xs text-charcoal cursor-not-allowed">
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Contact Value Text</label>
+            <input type="text" value="${item.text || ''}" 
+              oninput="window.updateFooterLinkField('${path}', ${index}, 'text', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Select Website Page (Option 1)</label>
+            <select onchange="window.updateFooterLinkField('${path}', ${index}, 'page', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+              ${selectOptions}
+            </select>
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Custom URL (Option 2 - Overrides Page)</label>
+            <input type="text" value="${item.customUrl || ''}" placeholder="https://... or /custom-page"
+              oninput="window.updateFooterLinkField('${path}', ${index}, 'customUrl', this.value)" 
+              class="w-full px-2 py-1.5 bg-white border border-sand rounded-lg text-xs text-charcoal focus:outline-none focus:border-flame transition">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+          <div>
+            <label class="text-[9px] font-bold text-slate block mb-1">Text Color Override</label>
+            <div class="flex items-center gap-2">
+              <input type="color" value="${item.color || '#EEDFCE'}" 
+                onchange="window.updateFooterLinkField('${path}', ${index}, 'color', this.value)" 
+                class="w-8 h-8 rounded cursor-pointer border border-sand shadow-sm p-0">
+              <button onclick="window.updateFooterLinkField('${path}', ${index}, 'color', ''); this.previousElementSibling.value='#EEDFCE';" 
+                class="px-2 py-1 bg-sand/30 hover:bg-sand/50 text-[10px] font-bold rounded text-slate hover:text-charcoal transition">Reset</button>
+            </div>
+          </div>
         </div>
       </div>
     `;
