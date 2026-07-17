@@ -499,7 +499,57 @@
       page: "/dashboard",
       customUrl: "",
       dropdown: []
-    }
+    },
+    right_action_buttons: [
+      {
+        id: "action_cart",
+        name: "Cart",
+        iconUrl: "",
+        iconSource: "none",
+        defaultIcon: "shopping-cart",
+        page: "",
+        customUrl: "",
+        url: "",
+        enabled: true,
+        visible: true,
+        showBeforeLogin: true,
+        actionType: "cart"
+      },
+      {
+        id: "action_orders",
+        name: "Order Tracking",
+        iconUrl: "",
+        iconSource: "none",
+        defaultIcon: "package",
+        page: "/order-tracking",
+        customUrl: "",
+        url: "/order-tracking",
+        enabled: true,
+        visible: true,
+        showBeforeLogin: true,
+        actionType: "orders"
+      },
+      {
+        id: "action_profile",
+        name: "Profile",
+        iconUrl: "",
+        iconSource: "none",
+        defaultIcon: "user",
+        page: "",
+        customUrl: "",
+        url: "",
+        enabled: true,
+        visible: true,
+        showBeforeLogin: false,
+        actionType: "profile",
+        dropdown: [
+          { name: "My Profile", page: "/user-profile", customUrl: "", url: "/user-profile", enabled: true, visible: true },
+          { name: "My Projects", page: "/dashboard", customUrl: "", url: "/dashboard", enabled: true, visible: true },
+          { name: "My Orders", page: "/orders-tracking", customUrl: "", url: "/orders-tracking", enabled: true, visible: true },
+          { name: "Settings", page: "/user-settings", customUrl: "", url: "/user-settings", enabled: true, visible: true }
+        ]
+      }
+    ]
   };
 
   window.publicCustomization = {};
@@ -792,12 +842,147 @@
 
     // 3. Contact & Socials
     window.renderDynamicSocialsAndContact();
+  }; // <-- ADD THIS CLOSING BRACE
 
-    // 4. Sweep DOM Elements
-    document.querySelectorAll('[data-cms]').forEach(el => {
-      const path = el.dataset.cms;
-      window.applySingleElement(el, path);
+  window.renderDynamicRightActionButtons = function () {
+    const container = document.getElementById('nav-auth-buttons');
+    if (!container) return;
+
+    if (window.currentUser && window.currentUser.role === 'admin') {
+      container.innerHTML = `
+        <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-2 text-charcoal hover:text-flame transition"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        <div class="w-10 h-10 rounded-full bg-flame text-cream flex items-center justify-center font-bold shadow-md cursor-pointer" onclick="handleLogout()" title="Logout">A</div>
+      `;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
+    if (!window.draftCustomization.right_action_buttons) {
+      window.draftCustomization.right_action_buttons = clone(window.defaultCustomization.right_action_buttons);
+    }
+    const buttons = window.draftCustomization.right_action_buttons;
+
+    let html = '';
+
+    if (!window.currentUser) {
+      html += `
+        <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-1 text-charcoal hover:text-flame transition">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      `;
+    }
+
+    buttons.forEach(btn => {
+      if (!btn.enabled || !btn.visible) return;
+
+      const showBeforeLoginVal = (btn.showBeforeLogin !== undefined)
+        ? btn.showBeforeLogin
+        : (btn.actionType !== 'profile');
+
+      if (!window.currentUser && !showBeforeLoginVal) return;
+
+      let iconHtml = '';
+      if ((btn.iconSource === 'image_url' || btn.iconSource === 'upload_image') && btn.iconUrl) {
+        iconHtml = `<img src="${btn.iconUrl}" class="w-4 h-4 object-contain inline-block mr-1.5 align-middle">`;
+      } else {
+        iconHtml = `<i data-lucide="${btn.defaultIcon || 'info'}" class="w-4 h-4 text-flame"></i>`;
+      }
+
+      const resolvedUrl = btn.customUrl ? btn.customUrl : (btn.page || '/');
+
+      if (btn.actionType === 'cart') {
+        html += `
+          <button id="header-nav-cart-btn" onclick="toggleModal('cart-modal')" class="p-2 md:p-2.5 rounded-xl text-charcoal bg-editorbg border border-sand hover:border-charcoal hover:bg-sand/30 transition flex items-center justify-center relative shadow-sm mr-1 md:mr-1" title="${btn.name}">
+            ${iconHtml}
+          </button>
+        `;
+      } else if (btn.actionType === 'orders') {
+        html += `
+          <button id="header-nav-orders-btn" onclick="window.handlePathRouting('${resolvedUrl}')" class="p-2 md:p-2.5 rounded-xl text-charcoal bg-editorbg border border-sand hover:border-charcoal hover:bg-sand/30 transition flex items-center justify-center relative shadow-sm mr-1 md:mr-1.5" title="${btn.name}">
+            ${iconHtml}
+          </button>
+        `;
+      } else if (btn.actionType === 'profile') {
+        if (window.currentUser) {
+          html += `
+            <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-1 text-charcoal hover:text-flame transition">
+              <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+          `;
+
+          const dropdownItems = btn.dropdown || [];
+          let dropdownHtml = '';
+          dropdownItems.forEach((sub) => {
+            if (sub.enabled === false || sub.visible === false) return;
+            const subUrl = sub.customUrl ? sub.customUrl : (sub.page || '/');
+            let clickAction = '';
+            if (subUrl === '/user-profile') {
+              clickAction = `onclick="switchView('user-profile'); document.getElementById('profile-dropdown-menu').classList.add('hidden')"`;
+            } else if (subUrl === '/dashboard') {
+              clickAction = `onclick="switchView('dashboard'); switchDashboardTab('projects'); document.getElementById('profile-dropdown-menu').classList.add('hidden')"`;
+            } else if (subUrl === '/orders-tracking') {
+              clickAction = `onclick="switchView('orders-tracking'); document.getElementById('profile-dropdown-menu').classList.add('hidden')"`;
+            } else if (subUrl === '/user-settings') {
+              clickAction = `onclick="switchView('user-settings'); document.getElementById('profile-dropdown-menu').classList.add('hidden')"`;
+            } else {
+              clickAction = `onclick="event.preventDefault(); window.handlePathRouting('${subUrl}'); document.getElementById('profile-dropdown-menu').classList.add('hidden')"`;
+            }
+
+            let subIcon = 'link';
+            const lowerName = sub.name.toLowerCase();
+            if (lowerName.includes('profile')) subIcon = 'user';
+            else if (lowerName.includes('project') || lowerName.includes('folder')) subIcon = 'folder';
+            else if (lowerName.includes('order') || lowerName.includes('package')) subIcon = 'package';
+            else if (lowerName.includes('setting')) subIcon = 'settings';
+
+            dropdownHtml += `
+              <button ${clickAction} class="w-full text-left px-5 py-2.5 text-sm font-bold text-charcoal hover:bg-sand/20 hover:text-flame transition flex items-center gap-3">
+                <i data-lucide="${subIcon}" class="w-4 h-4"></i> ${sub.name}
+              </button>
+            `;
+          });
+
+          dropdownHtml += `
+            <div class="border-t border-sand/40 my-1 pt-1">
+              <button onclick="handleLogout()" class="w-full text-left px-5 py-2.5 text-sm font-black text-red-600 hover:bg-red-50 transition border-2 border-transparent hover:border-red-200 mx-2 !w-[calc(100%-16px)] rounded-xl flex items-center gap-3">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Log Out
+              </button>
+            </div>
+          `;
+
+          html += `
+            <div class="relative">
+              <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-flame text-cream flex items-center justify-center text-sm md:text-base font-bold shadow-md cursor-pointer shrink-0" onclick="document.getElementById('profile-dropdown-menu').classList.toggle('hidden')" title="${btn.name}">
+                ${window.currentUser.name.charAt(0).toUpperCase()}
+              </div>
+              <div id="profile-dropdown-menu" class="hidden absolute right-0 top-full mt-3 w-56 bg-white border border-sand shadow-xl rounded-2xl py-2 z-[1010]">
+                <div class="px-4 py-3 border-b border-sand/40 mb-2 bg-editorbg/50">
+                  <p class="text-sm font-black text-charcoal truncate">${window.currentUser.name}</p>
+                  <p class="text-[10px] font-bold text-slate truncate">${window.currentUser.email}</p>
+                </div>
+                ${dropdownHtml}
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        html += `
+          <button onclick="window.handlePathRouting('${resolvedUrl}')" class="p-2 md:p-2.5 rounded-xl text-charcoal bg-editorbg border border-sand hover:border-charcoal hover:bg-sand/30 transition flex items-center justify-center relative shadow-sm mr-1 md:mr-1.5" title="${btn.name}">
+            ${iconHtml}
+          </button>
+        `;
+      }
     });
+
+    if (!window.currentUser) {
+      html += `
+        <button onclick="toggleModal('login-modal')" class="hidden md:inline-block px-5 py-2.5 rounded-xl text-sm font-bold text-charcoal hover:bg-sand/30 transition">Log In</button>
+        <button onclick="toggleModal('signup-modal')" class="hidden md:inline-block glass-btn-dark px-5 py-2.5 rounded-xl text-sm font-bold text-cream hover:bg-flame hover:border-flame transition duration-200">Sign Up</button>
+      `;
+    }
+
+    container.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   };
 
   // ==========================================
@@ -816,41 +1001,51 @@
       link.href = conf.faviconUrl;
     }
 
-    // Render text or image logo in headers
-    const logoContainers = document.querySelectorAll('.header-logo');
+    // Apply main header logo
+    const lightTextLogo = document.getElementById('logo-light-text');
+    const darkTextLogo = document.getElementById('logo-dark-text');
+    const lightImgLogo = document.getElementById('logo-light-img');
+    const darkImgLogo = document.getElementById('logo-dark-img');
+
+    // Branding toggles
+    const logoContainers = document.querySelectorAll('.header-branding-container');
     logoContainers.forEach(container => {
       if (conf.hideBranding) {
-        container.style.display = 'none';
-        return;
+        container.classList.add('hidden');
       } else {
-        container.style.display = '';
-      }
+        container.classList.remove('hidden');
 
-      if (conf.type === 'image' && (conf.lightLogoUrl || conf.darkLogoUrl)) {
-        // Detect if admin view (requires dark/light logo accordingly) or regular page
-        const isAdmin = document.getElementById('admin-view') && !document.getElementById('admin-view').classList.contains('hidden');
-        const url = isAdmin ? (conf.darkLogoUrl || conf.lightLogoUrl) : (conf.lightLogoUrl || conf.darkLogoUrl);
-        container.innerHTML = `<img src="${url}" alt="FrameCraft Logo" class="h-10 object-contain">`;
-      } else {
-        container.innerHTML = `<h2>${conf.textPrefix || 'Frame'}<span>${conf.textSuffix || 'Craft'}</span></h2>`;
+        // Handle custom click destination
+        const destUrl = conf.brandingCustomUrl || conf.brandingPage || '/';
+        container.style.cursor = 'pointer';
+        container.onclick = (e) => {
+          e.preventDefault();
+          window.handlePathRouting(destUrl);
+        };
       }
-
-      // Handle custom click destination
-      const destUrl = conf.brandingCustomUrl || conf.brandingPage || '/';
-      container.style.cursor = 'pointer';
-      container.onclick = (e) => {
-        e.preventDefault();
-        window.handlePathRouting(destUrl);
-      };
     });
 
-    // Footer Logo
-    const footerLogo = document.querySelector('#site-footer h3');
-    if (footerLogo) {
-      if (conf.type === 'image' && conf.footerLogoUrl) {
-        footerLogo.innerHTML = `<img src="${conf.footerLogoUrl}" alt="FrameCraft Logo" class="h-10 object-contain mb-4">`;
-      } else {
-        footerLogo.innerHTML = `${conf.textPrefix || 'Frame'}<span class="text-flame">${conf.textSuffix || 'Craft'}</span>`;
+    if (conf.type === 'text') {
+      if (lightTextLogo) {
+        lightTextLogo.classList.remove('hidden');
+        lightTextLogo.innerHTML = `<span>${conf.textPrefix || ''}</span><span class="text-flame">${conf.textSuffix || ''}</span>`;
+      }
+      if (darkTextLogo) {
+        darkTextLogo.classList.remove('hidden');
+        darkTextLogo.innerHTML = `<span>${conf.textPrefix || ''}</span><span class="text-flame">${conf.textSuffix || ''}</span>`;
+      }
+      if (lightImgLogo) lightImgLogo.classList.add('hidden');
+      if (darkImgLogo) darkImgLogo.classList.add('hidden');
+    } else {
+      if (lightTextLogo) lightTextLogo.classList.add('hidden');
+      if (darkTextLogo) darkTextLogo.classList.add('hidden');
+      if (lightImgLogo && conf.lightLogoUrl) {
+        lightImgLogo.classList.remove('hidden');
+        lightImgLogo.src = conf.lightLogoUrl;
+      }
+      if (darkImgLogo && conf.darkLogoUrl) {
+        darkImgLogo.classList.remove('hidden');
+        darkImgLogo.src = conf.darkLogoUrl;
       }
     }
   };
@@ -858,52 +1053,34 @@
   window.renderDynamicNavigation = function () {
     const navItems = window.draftCustomization.navigation || [];
 
+    // Render Right Action Buttons
+    window.renderDynamicRightActionButtons();
+
     // 1. Render Desktop Nav links
     const desktopContainer = document.getElementById('header-nav-links');
     if (desktopContainer) {
       let html = '';
       navItems.forEach(item => {
         if (!item.enabled) return;
+        const resolvedUrl = item.customUrl ? item.customUrl : (item.page || '/');
         if (item.dropdown && item.dropdown.length > 0) {
           html += `
             <div class="nav-dropdown-container">
-              <a href="${item.url}" class="dropdown-trigger" onclick="event.preventDefault(); window.handlePathRouting('${item.url}')">
+              <a href="${resolvedUrl}" class="dropdown-trigger" onclick="event.preventDefault(); window.handlePathRouting('${resolvedUrl}')">
                 ${item.name} <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 transition-transform duration-200"></i>
               </a>
               <div class="dropdown-menu">
-                ${item.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); window.closeAllDropdowns()">${d.name}</a>`).join('')}
+                ${item.dropdown.map(d => {
+            const resolvedSubUrl = d.customUrl ? d.customUrl : (d.page || '/');
+            return `<a href="${resolvedSubUrl}" onclick="event.preventDefault(); window.handlePathRouting('${resolvedSubUrl}'); window.closeAllDropdowns()">${d.name}</a>`;
+          }).join('')}
               </div>
             </div>
           `;
         } else {
-          html += `<a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}')">${item.name}</a>`;
+          html += `<a href="${resolvedUrl}" onclick="event.preventDefault(); window.handlePathRouting('${resolvedUrl}')">${item.name}</a>`;
         }
       });
-
-      // Render Right Action Button if enabled & visible
-      const rightBtn = window.draftCustomization.right_action_btn;
-      if (rightBtn && rightBtn.enabled && rightBtn.visible) {
-        const btnUrl = rightBtn.customUrl || rightBtn.page || '/';
-        const iconHtml = rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-4 h-4 object-contain inline mr-1.5 align-middle">` : '';
-        if (rightBtn.dropdown && rightBtn.dropdown.length > 0) {
-          html += `
-            <div class="nav-dropdown-container">
-              <a href="${btnUrl}" class="dropdown-trigger flex items-center" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}')">
-                ${iconHtml}<span>${rightBtn.text}</span> <i class="fa-solid fa-chevron-down text-[10px] ml-1.5 transition-transform duration-200"></i>
-              </a>
-              <div class="dropdown-menu">
-                ${rightBtn.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); window.closeAllDropdowns()">${d.name}</a>`).join('')}
-              </div>
-            </div>
-          `;
-        } else {
-          html += `
-            <a href="${btnUrl}" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}')" class="flex items-center">
-              ${iconHtml}<span>${rightBtn.text}</span>
-            </a>
-          `;
-        }
-      }
 
       desktopContainer.innerHTML = html;
     }
@@ -914,38 +1091,23 @@
       let html = '';
       navItems.forEach(item => {
         if (!item.enabled) return;
+        const resolvedUrl = item.customUrl ? item.customUrl : (item.page || '/');
         if (item.dropdown && item.dropdown.length > 0) {
           html += `
             <div class="space-y-3">
               <span class="block text-xs font-bold text-slate uppercase tracking-wider">${item.name}</span>
               <div class="pl-4 space-y-3 border-l-2 border-sand/30">
-                ${item.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); toggleMobileMenu()" class="block text-sm font-semibold text-charcoal">${d.name}</a>`).join('')}
+                ${item.dropdown.map(d => {
+            const resolvedSubUrl = d.customUrl ? d.customUrl : (d.page || '/');
+            return `<a href="${resolvedSubUrl}" onclick="event.preventDefault(); window.handlePathRouting('${resolvedSubUrl}'); toggleMobileMenu()" class="block text-sm font-semibold text-charcoal">${d.name}</a>`;
+          }).join('')}
               </div>
             </div>
           `;
         } else {
-          html += `<a href="${item.url}" onclick="event.preventDefault(); window.handlePathRouting('${item.url}'); toggleMobileMenu()" class="block text-lg font-bold text-charcoal">${item.name}</a>`;
+          html += `<a href="${resolvedUrl}" onclick="event.preventDefault(); window.handlePathRouting('${resolvedUrl}'); toggleMobileMenu()" class="block text-lg font-bold text-charcoal">${item.name}</a>`;
         }
       });
-
-      // Render Mobile Right Action Button if enabled & visible
-      const rightBtn = window.draftCustomization.right_action_btn;
-      if (rightBtn && rightBtn.enabled && rightBtn.visible) {
-        const btnUrl = rightBtn.customUrl || rightBtn.page || '/';
-        const iconHtml = rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-4 h-4 object-contain inline mr-1.5 align-middle">` : '';
-        if (rightBtn.dropdown && rightBtn.dropdown.length > 0) {
-          html += `
-            <div class="space-y-3">
-              <span class="block text-xs font-bold text-slate uppercase tracking-wider">${iconHtml}${rightBtn.text}</span>
-              <div class="pl-4 space-y-3 border-l-2 border-sand/30">
-                ${rightBtn.dropdown.map(d => `<a href="${d.url}" onclick="event.preventDefault(); window.handlePathRouting('${d.url}'); toggleMobileMenu()" class="block text-sm font-semibold text-charcoal">${d.name}</a>`).join('')}
-              </div>
-            </div>
-          `;
-        } else {
-          html += `<a href="${btnUrl}" onclick="event.preventDefault(); window.handlePathRouting('${btnUrl}'); toggleMobileMenu()" class="block text-lg font-bold text-charcoal">${iconHtml}${rightBtn.text}</a>`;
-        }
-      }
 
       mobileContainer.innerHTML = html;
     }
@@ -967,7 +1129,7 @@
           let displayName = item.name;
           if (displayName.toUpperCase() === 'ABOUT US') displayName = 'About';
           else if (displayName.toUpperCase() === 'CONTACT US') displayName = 'Contact';
-          
+
           // Capitalize title-case
           displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
 
@@ -986,13 +1148,13 @@
         servicesEl.value.forEach(item => {
           const url = item.customUrl || item.page || '#';
           const styleAttr = item.color ? `style="color: ${item.color} !important;"` : '';
-          
+
           let clickHandler = `onclick="event.preventDefault(); window.handlePathRouting('${url}')"`;
           if (url.startsWith('#')) {
             const sectionId = url.replace('#', '');
             clickHandler = `onclick="event.preventDefault(); scrollToSection('${sectionId}')"`;
           }
-          
+
           html += `<li><a href="${url}" ${clickHandler} class="text-sand hover:text-cream transition" ${styleAttr}>${item.name}</a></li>`;
         });
         servicesContainer.innerHTML = html;
@@ -1087,7 +1249,7 @@
           if (item.name === "Phone" && !textVal) textVal = contact.phone;
 
           const colorStyle = item.color ? `style="color: ${item.color} !important;"` : '';
-          
+
           let content = textVal;
           if (item.name === "Email") {
             const mailUrl = item.customUrl || item.page || `mailto:${textVal}`;
@@ -1894,9 +2056,14 @@
     window.showGlobalLoader();
     try {
       const secureUrl = await uploadToCloudinary(e.target.files[0]);
-      window.setCmsValue(`${pathString}.value`, secureUrl);
+      if (pathString.startsWith('right_action_buttons') || pathString.startsWith('navigation')) {
+        window.setCmsValue(pathString, secureUrl);
+      } else {
+        window.setCmsValue(`${pathString}.value`, secureUrl);
+      }
 
-      const prev = document.getElementById(`preview-img-${pathString.replace(/\./g, '-')}`);
+      const cleanPathStr = pathString.replace(/\[\d+\]/g, '').replace(/\./g, '-');
+      const prev = document.getElementById(`preview-img-${cleanPathStr}`);
       if (prev) prev.src = secureUrl;
       showToast("Image uploaded successfully!");
     } catch (err) {
@@ -2075,13 +2242,25 @@
 
   // Nav actions
   window.updateNavField = function (idx, key, val) {
-    window.draftCustomization.navigation[idx][key] = val;
+    const item = window.draftCustomization.navigation[idx];
+    item[key] = val;
+    if (item.page === undefined) item.page = "";
+    if (item.customUrl === undefined) item.customUrl = "";
+
+    item.url = item.customUrl ? item.customUrl : (item.page || '/');
+
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
   };
 
   window.updateNavSubField = function (idx, sIdx, key, val) {
-    window.draftCustomization.navigation[idx].dropdown[sIdx][key] = val;
+    const sub = window.draftCustomization.navigation[idx].dropdown[sIdx];
+    sub[key] = val;
+    if (sub.page === undefined) sub.page = "";
+    if (sub.customUrl === undefined) sub.customUrl = "";
+
+    sub.url = sub.customUrl ? sub.customUrl : (sub.page || '/');
+
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
   };
@@ -2658,65 +2837,82 @@
     }
   };
 
-  window.updateRightBtnField = function (key, val) {
-    if (!window.draftCustomization.right_action_btn) {
-      window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
+  window.updateRightBtnField = function (btnIdx, key, val) {
+    if (!window.draftCustomization.right_action_buttons) {
+      window.draftCustomization.right_action_buttons = clone(window.defaultCustomization.right_action_buttons);
     }
-    window.draftCustomization.right_action_btn[key] = val;
-    
+    const btn = window.draftCustomization.right_action_buttons[btnIdx];
+    btn[key] = val;
+
     // Clear iconUrl if iconSource is none
     if (key === 'iconSource' && val === 'none') {
-      window.draftCustomization.right_action_btn.iconUrl = "";
+      btn.iconUrl = "";
     }
-    
-    // Sync url
-    if (key === 'page' || key === 'customUrl') {
-      window.draftCustomization.right_action_btn.url = window.draftCustomization.right_action_btn.customUrl || window.draftCustomization.right_action_btn.page || '/';
+
+    if (btn.page === undefined) btn.page = "";
+    if (btn.customUrl === undefined) btn.customUrl = "";
+
+    btn.url = btn.customUrl ? btn.customUrl : (btn.page || '/');
+
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    if (key === 'iconSource' || key === 'enabled' || key === 'visible' || key === 'name' || key === 'showBeforeLogin') {
+      window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
     }
-    
+  };
+
+  window.addRightBtnDropdownItem = function (btnIdx) {
+    const btn = window.draftCustomization.right_action_buttons[btnIdx];
+    if (!btn.dropdown) {
+      btn.dropdown = [];
+    }
+    btn.dropdown.push({ name: "New Sublink", url: "/", page: "/", customUrl: "", enabled: true, visible: true });
+
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
     window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
   };
 
-  window.addRightBtnDropdownItem = function () {
-    if (!window.draftCustomization.right_action_btn) {
-      window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
-    }
-    if (!window.draftCustomization.right_action_btn.dropdown) {
-      window.draftCustomization.right_action_btn.dropdown = [];
-    }
-    window.draftCustomization.right_action_btn.dropdown.push({ name: "New Sublink", url: "/", page: "/", customUrl: "" });
-    
+  window.updateRightBtnSubField = function (btnIdx, sIdx, key, val) {
+    const sub = window.draftCustomization.right_action_buttons[btnIdx].dropdown[sIdx];
+    sub[key] = val;
+    if (sub.page === undefined) sub.page = "";
+    if (sub.customUrl === undefined) sub.customUrl = "";
+
+    sub.url = sub.customUrl ? sub.customUrl : (sub.page || '/');
+
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+  };
+
+  window.deleteRightBtnSub = function (btnIdx, sIdx) {
+    window.draftCustomization.right_action_buttons[btnIdx].dropdown.splice(sIdx, 1);
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
     window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
   };
 
-  window.updateRightBtnSubField = function (sIdx, key, val) {
-    window.draftCustomization.right_action_btn.dropdown[sIdx][key] = val;
-    if (key === 'page' || key === 'customUrl') {
-      window.draftCustomization.right_action_btn.dropdown[sIdx].url = window.draftCustomization.right_action_btn.dropdown[sIdx].customUrl || window.draftCustomization.right_action_btn.dropdown[sIdx].page || '/';
-    }
-    window.applyCmsPreview('navigation');
-    window.checkCmsDirty();
-  };
-
-  window.deleteRightBtnSub = function (sIdx) {
-    window.draftCustomization.right_action_btn.dropdown.splice(sIdx, 1);
-    window.applyCmsPreview('navigation');
-    window.checkCmsDirty();
-    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
-  };
-
-  window.reorderRightBtnSub = function (sIdx, dir) {
-    const arr = window.draftCustomization.right_action_btn.dropdown;
+  window.reorderRightBtnSub = function (btnIdx, sIdx, dir) {
+    const arr = window.draftCustomization.right_action_buttons[btnIdx].dropdown;
     const targetIdx = sIdx + dir;
     if (targetIdx < 0 || targetIdx >= arr.length) return;
     const temp = arr[sIdx];
     arr[sIdx] = arr[targetIdx];
     arr[targetIdx] = temp;
-    
+
+    window.applyCmsPreview('navigation');
+    window.checkCmsDirty();
+    window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
+  };
+
+  window.reorderRightBtn = function (btnIdx, dir) {
+    const arr = window.draftCustomization.right_action_buttons;
+    const targetIdx = btnIdx + dir;
+    if (targetIdx < 0 || targetIdx >= arr.length) return;
+    const temp = arr[btnIdx];
+    arr[btnIdx] = arr[targetIdx];
+    arr[targetIdx] = temp;
+
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
     window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
@@ -2729,7 +2925,7 @@
     const temp = arr[sIdx];
     arr[sIdx] = arr[targetIdx];
     arr[targetIdx] = temp;
-    
+
     window.applyCmsPreview('navigation');
     window.checkCmsDirty();
     window.renderHeaderCmsEditor(document.getElementById('cms-item-editor-frame'));
@@ -2738,12 +2934,28 @@
   window.renderHeaderCmsEditor = function (container) {
     const logos = window.draftCustomization.logos || {};
     const nav = window.draftCustomization.navigation || [];
-    
+
     // Ensure default settings exist for right_action_btn
     if (!window.draftCustomization.right_action_btn) {
       window.draftCustomization.right_action_btn = clone(window.defaultCustomization.right_action_btn);
     }
     const rightBtn = window.draftCustomization.right_action_btn;
+
+    // Ensure default settings exist for right_action_buttons
+    if (!window.draftCustomization.right_action_buttons) {
+      window.draftCustomization.right_action_buttons = clone(window.defaultCustomization.right_action_buttons);
+    }
+    const rightBtns = window.draftCustomization.right_action_buttons;
+    rightBtns.forEach(btn => {
+      if (btn.page === undefined) btn.page = "";
+      if (btn.customUrl === undefined) btn.customUrl = btn.url || "";
+      if (btn.dropdown) {
+        btn.dropdown.forEach(sub => {
+          if (sub.page === undefined) sub.page = "";
+          if (sub.customUrl === undefined) sub.customUrl = sub.url || "";
+        });
+      }
+    });
 
     // Migrate navigation fields for page and customUrl
     nav.forEach(item => {
@@ -2786,7 +2998,7 @@
       { name: "Order Tracking", path: "/order-tracking" },
       { name: "Checkout", path: "/checkout" }
     ];
-    
+
     const brandingSelect = brandingPages.map(p => `
       <option value="${p.path}" ${logos.brandingPage === p.path ? 'selected' : ''}>${p.name}</option>
     `).join('');
@@ -2847,11 +3059,11 @@
           
           <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
             ${nav.map((item, idx) => {
-              const pagesSelectOptions = brandingPages.map(p => `
+      const pagesSelectOptions = brandingPages.map(p => `
                 <option value="${p.path}" ${item.page === p.path ? 'selected' : ''}>${p.name}</option>
               `).join('');
-              
-              return `
+
+      return `
                 <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3 relative group">
                   <div class="absolute right-3 top-3 flex items-center gap-1">
                     <button onclick="window.reorderNav(${idx}, -1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
@@ -2891,11 +3103,11 @@
                     ${item.dropdown && item.dropdown.length > 0 ? `
                       <div class="space-y-2 pl-4 border-l border-sand/40">
                         ${item.dropdown.map((sub, sIdx) => {
-                          const subSelectOptions = brandingPages.map(p => `
+        const subSelectOptions = brandingPages.map(p => `
                             <option value="${p.path}" ${sub.page === p.path ? 'selected' : ''}>${p.name}</option>
                           `).join('');
-                          
-                          return `
+
+        return `
                             <div class="bg-white/40 p-2 border border-sand/30 rounded-lg space-y-2">
                               <div class="flex items-center gap-2">
                                 <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateNavSubField(${idx}, ${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
@@ -2912,123 +3124,167 @@
                               </div>
                             </div>
                           `;
-                        }).join('')}
+      }).join('')}
                       </div>
                     ` : `<span class="text-[9px] text-slate italic block pl-4">No drop-down sublinks registered.</span>`}
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         </div>
       </div>
     `;
 
-    // SECTION 3: RIGHT ACTION BUTTON ACCORDION
-    const rightBtnSelectOptions = brandingPages.map(p => `
-      <option value="${p.path}" ${rightBtn.page === p.path ? 'selected' : ''}>${p.name}</option>
-    `).join('');
-    
+    // SECTION 3: RIGHT ACTION BUTTONS ACCORDION
     html += `
       <div class="bg-white border border-sand/45 rounded-2xl overflow-hidden shadow-sm">
         <button onclick="window.toggleHeaderAccordion('header-acc-right-btn')" class="w-full flex items-center justify-between p-4 bg-white hover:bg-editorbg/30 text-left transition font-bold text-xs text-charcoal border-b border-sand/30">
-          <span>Right Action Button</span>
+          <span>Right Action Buttons</span>
           <i data-lucide="chevron-down" class="w-4 h-4 text-slate transform transition-transform duration-200" id="icon-header-acc-right-btn"></i>
         </button>
         <div id="header-acc-right-btn" class="hidden p-5 space-y-4">
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="chk-right-btn-enabled" ${rightBtn.enabled ? 'checked' : ''} onchange="window.updateRightBtnField('enabled', this.checked)" class="rounded border-sand text-flame">
-              <label for="chk-right-btn-enabled" class="text-xs font-bold text-charcoal cursor-pointer">Restore (Enabled)</label>
+          <div class="space-y-4">
+    `;
+
+    rightBtns.forEach((btn, btnIdx) => {
+      const rightBtnSelectOptions = brandingPages.map(p => `
+        <option value="${p.path}" ${btn.page === p.path ? 'selected' : ''}>${p.name}</option>
+      `).join('');
+
+      const showBeforeLoginVal = (btn.showBeforeLogin !== undefined)
+        ? btn.showBeforeLogin
+        : (btn.actionType !== 'profile');
+
+      html += `
+        <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3 relative group">
+          <div class="absolute right-3 top-3 flex items-center gap-1">
+            <button onclick="window.reorderRightBtn(${btnIdx}, -1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-up" class="w-3.5 h-3.5"></i></button>
+            <button onclick="window.reorderRightBtn(${btnIdx}, 1)" class="w-6 h-6 rounded bg-white border border-sand flex items-center justify-center text-slate hover:text-charcoal"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+          </div>
+
+          <div class="text-xs font-bold text-charcoal flex items-center gap-2">
+            <span>${btn.name || 'Action Button'}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-sand/50 text-slate uppercase font-semibold">${btn.actionType}</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-2 py-1">
+            <div class="flex items-center gap-1.5">
+              <input type="checkbox" id="chk-btn-enabled-${btnIdx}" ${btn.enabled ? 'checked' : ''} onchange="window.updateRightBtnField(${btnIdx}, 'enabled', this.checked)" class="rounded border-sand text-flame">
+              <label for="chk-btn-enabled-${btnIdx}" class="text-[10px] font-bold text-slate cursor-pointer">Restore (Enabled)</label>
             </div>
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="chk-right-btn-visible" ${rightBtn.visible ? 'checked' : ''} onchange="window.updateRightBtnField('visible', this.checked)" class="rounded border-sand text-flame">
-              <label for="chk-right-btn-visible" class="text-xs font-bold text-charcoal cursor-pointer">Show (Visible)</label>
+            <div class="flex items-center gap-1.5">
+              <input type="checkbox" id="chk-btn-visible-${btnIdx}" ${btn.visible ? 'checked' : ''} onchange="window.updateRightBtnField(${btnIdx}, 'visible', this.checked)" class="rounded border-sand text-flame">
+              <label for="chk-btn-visible-${btnIdx}" class="text-[10px] font-bold text-slate cursor-pointer">Show (Visible)</label>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <label for="sel-btn-showbeforelogin-${btnIdx}" class="text-[10px] font-bold text-slate">Show Before Login:</label>
+              <select id="sel-btn-showbeforelogin-${btnIdx}" onchange="window.updateRightBtnField(${btnIdx}, 'showBeforeLogin', this.value === 'yes')" class="p-1 bg-white border border-sand rounded text-[10px] font-bold text-slate">
+                <option value="yes" ${showBeforeLoginVal ? 'selected' : ''}>Yes</option>
+                <option value="no" ${!showBeforeLoginVal ? 'selected' : ''}>No</option>
+              </select>
             </div>
           </div>
-          
+
           <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="text-[8px] font-bold block mb-0.5 text-slate">Button Text</label>
-              <input type="text" value="${rightBtn.text || ''}" oninput="window.updateRightBtnField('text', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+              <label class="text-[8px] font-bold block mb-0.5 text-slate">Rename Button</label>
+              <input type="text" value="${btn.name || ''}" oninput="window.updateRightBtnField(${btnIdx}, 'name', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
             </div>
             <div>
               <label class="text-[8px] font-bold block mb-0.5 text-slate">Select Page</label>
-              <select onchange="window.updateRightBtnField('page', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+              <select onchange="window.updateRightBtnField(${btnIdx}, 'page', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
                 <option value="">-- Custom URL --</option>
                 ${rightBtnSelectOptions}
               </select>
             </div>
             <div>
               <label class="text-[8px] font-bold block mb-0.5 text-slate">Custom URL</label>
-              <input type="text" value="${rightBtn.customUrl || ''}" placeholder="e.g. /custom" oninput="window.updateRightBtnField('customUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+              <input type="text" value="${btn.customUrl || ''}" placeholder="e.g. /custom" oninput="window.updateRightBtnField(${btnIdx}, 'customUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
             </div>
           </div>
-          
+
           <!-- Icon options -->
           <div class="p-4 bg-editorbg/30 border border-sand/40 rounded-xl space-y-3">
             <span class="text-[9px] font-black uppercase text-slate tracking-wider block">Button Icon Settings</span>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="text-[8px] font-bold block mb-0.5 text-slate">Icon Method</label>
-                <select onchange="window.updateRightBtnField('iconSource', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
-                  <option value="none" ${rightBtn.iconSource === 'none' ? 'selected' : ''}>No Icon</option>
-                  <option value="image_url" ${rightBtn.iconSource === 'image_url' ? 'selected' : ''}>Image URL</option>
-                  <option value="upload_image" ${rightBtn.iconSource === 'upload_image' ? 'selected' : ''}>Upload Image</option>
+                <select onchange="window.updateRightBtnField(${btnIdx}, 'iconSource', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                  <option value="none" ${btn.iconSource === 'none' ? 'selected' : ''}>Default Icon</option>
+                  <option value="image_url" ${btn.iconSource === 'image_url' ? 'selected' : ''}>Image URL</option>
+                  <option value="upload_image" ${btn.iconSource === 'upload_image' ? 'selected' : ''}>Upload Image</option>
                 </select>
               </div>
               
               <div>
-                ${rightBtn.iconSource === 'image_url' ? `
+                ${btn.iconSource === 'image_url' ? `
                   <label class="text-[8px] font-bold block mb-0.5 text-slate">Icon Image URL</label>
-                  <input type="text" value="${rightBtn.iconUrl || ''}" oninput="window.updateRightBtnField('iconUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
+                  <input type="text" value="${btn.iconUrl || ''}" oninput="window.updateRightBtnField(${btnIdx}, 'iconUrl', this.value)" class="w-full p-1.5 bg-white border border-sand rounded-lg text-[10px]">
                 ` : ''}
                 
-                ${rightBtn.iconSource === 'upload_image' ? `
+                ${btn.iconSource === 'upload_image' ? `
                   <label class="text-[8px] font-bold block mb-0.5 text-slate">Upload Icon</label>
                   <div class="flex items-center gap-2">
-                    <button onclick="document.getElementById('upload-right-btn-icon').click()" class="bg-flame text-cream px-3 py-1.5 rounded-lg text-[9px] font-bold shadow transition shrink-0">Upload File</button>
-                    <input type="file" id="upload-right-btn-icon" class="hidden" onchange="window.handleCmsImageUpload(event, 'right_action_btn.iconUrl')">
-                    ${rightBtn.iconUrl ? `<img src="${rightBtn.iconUrl}" class="w-8 h-8 object-contain rounded border border-sand">` : ''}
+                    <button onclick="document.getElementById('upload-right-btn-icon-${btnIdx}').click()" class="bg-flame text-cream px-3 py-1.5 rounded-lg text-[9px] font-bold shadow transition shrink-0">Upload File</button>
+                    <input type="file" id="upload-right-btn-icon-${btnIdx}" class="hidden" onchange="window.handleCmsImageUpload(event, 'right_action_buttons.${btnIdx}.iconUrl')">
+                    ${btn.iconUrl ? `<img id="preview-img-right_action_buttons-${btnIdx}-iconUrl" src="${btn.iconUrl}" class="w-8 h-8 object-contain rounded border border-sand">` : ''}
                   </div>
                 ` : ''}
               </div>
             </div>
           </div>
-          
-          <!-- Dropdown submenu for Right Button -->
-          <div class="border-t border-sand/20 pt-3 space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-[9px] font-bold uppercase tracking-wider text-slate">Dropdown Submenu Links</span>
-              <button onclick="window.addRightBtnDropdownItem()" class="text-[9px] text-flame font-bold hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-2.5 h-2.5"></i> Add Sublink</button>
-            </div>
-            ${rightBtn.dropdown && rightBtn.dropdown.length > 0 ? `
-              <div class="space-y-2 pl-4 border-l border-sand/40">
-                ${rightBtn.dropdown.map((sub, sIdx) => {
-                  const subSelectOptions = brandingPages.map(p => `
-                    <option value="${p.path}" ${sub.page === p.path ? 'selected' : ''}>${p.name}</option>
-                  `).join('');
-                  
-                  return `
-                    <div class="bg-white/40 p-2 border border-sand/30 rounded-lg space-y-2">
-                      <div class="flex items-center gap-2">
-                        <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateRightBtnSubField(${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
-                        <select onchange="window.updateRightBtnSubField(${sIdx}, 'page', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
-                          <option value="">-- Custom URL --</option>
-                          ${subSelectOptions}
-                        </select>
-                        <input type="text" value="${sub.customUrl || ''}" placeholder="Sub Custom URL" oninput="window.updateRightBtnSubField(${sIdx}, 'customUrl', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-1/3">
-                        <button onclick="window.deleteRightBtnSub(${sIdx})" class="text-red-500 hover:text-red-700 ml-auto shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
-                      </div>
-                      <div class="flex items-center gap-1 pl-2">
-                        <button onclick="window.reorderRightBtnSub(${sIdx}, -1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-up" class="w-2.5 h-2.5"></i> Up</button>
-                        <button onclick="window.reorderRightBtnSub(${sIdx}, 1)" class="text-[9px] bg-white border border-sand px-1.5 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-down" class="w-2.5 h-2.5"></i> Down</button>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
+
+          <!-- Dropdown submenu for Profile -->
+          ${btn.actionType === 'profile' ? `
+            <div class="border-t border-sand/20 pt-3 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-[9px] font-bold uppercase tracking-wider text-slate">Profile Dropdown Submenu Links</span>
+                <button onclick="window.addRightBtnDropdownItem(${btnIdx})" class="text-[9px] text-flame font-bold hover:underline flex items-center gap-0.5"><i data-lucide="plus" class="w-2.5 h-2.5"></i> Add Sublink</button>
               </div>
-            ` : `<span class="text-[9px] text-slate italic block pl-4">No sublinks registered.</span>`}
+              ${btn.dropdown && btn.dropdown.length > 0 ? `
+                <div class="space-y-2 pl-4 border-l border-sand/40">
+                  ${btn.dropdown.map((sub, sIdx) => {
+        const subSelectOptions = brandingPages.map(p => `
+                      <option value="${p.path}" ${sub.page === p.path ? 'selected' : ''}>${p.name}</option>
+                    `).join('');
+
+        return `
+                      <div class="bg-white/40 p-2 border border-sand/30 rounded-lg space-y-2">
+                        <div class="flex items-center gap-2">
+                          <input type="text" value="${sub.name}" placeholder="Sub Name" oninput="window.updateRightBtnSubField(${btnIdx}, ${sIdx}, 'name', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-[30%]">
+                          <select onchange="window.updateRightBtnSubField(${btnIdx}, ${sIdx}, 'page', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-[30%]">
+                            <option value="">-- Custom URL --</option>
+                            ${subSelectOptions}
+                          </select>
+                          <input type="text" value="${sub.customUrl || ''}" placeholder="Sub Custom URL" oninput="window.updateRightBtnSubField(${btnIdx}, ${sIdx}, 'customUrl', this.value)" class="p-1 text-xs border border-sand rounded bg-white w-[30%]">
+                          <button onclick="window.deleteRightBtnSub(${btnIdx}, ${sIdx})" class="text-red-500 hover:text-red-700 ml-auto shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <div class="flex items-center gap-3 pl-2">
+                          <div class="flex items-center gap-1">
+                            <input type="checkbox" id="chk-sub-enabled-${btnIdx}-${sIdx}" ${sub.enabled !== false ? 'checked' : ''} onchange="window.updateRightBtnSubField(${btnIdx}, ${sIdx}, 'enabled', this.checked)" class="rounded border-sand text-flame w-3 h-3">
+                            <label for="chk-sub-enabled-${btnIdx}-${sIdx}" class="text-[8px] font-bold text-slate cursor-pointer">Restore (Enabled)</label>
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <input type="checkbox" id="chk-sub-visible-${btnIdx}-${sIdx}" ${sub.visible !== false ? 'checked' : ''} onchange="window.updateRightBtnSubField(${btnIdx}, ${sIdx}, 'visible', this.checked)" class="rounded border-sand text-flame w-3 h-3">
+                            <label for="chk-sub-visible-${btnIdx}-${sIdx}" class="text-[8px] font-bold text-slate cursor-pointer">Show (Visible)</label>
+                          </div>
+                          <button onclick="window.reorderRightBtnSub(${btnIdx}, ${sIdx}, -1)" class="text-[8px] bg-white border border-sand px-1 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-up" class="w-2 h-2"></i> Up</button>
+                          <button onclick="window.reorderRightBtnSub(${btnIdx}, ${sIdx}, 1)" class="text-[8px] bg-white border border-sand px-1 py-0.5 rounded text-slate hover:text-charcoal flex items-center gap-0.5"><i data-lucide="chevron-down" class="w-2 h-2"></i> Down</button>
+                        </div>
+                      </div>
+                    `;
+      }).join('')}
+                </div>
+              ` : `<span class="text-[9px] text-slate italic block pl-4">No sublinks registered.</span>`}
+            </div>
+          ` : ''}
+
+        </div>
+      `;
+    });
+
+    html += `
           </div>
         </div>
       </div>

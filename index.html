@@ -8743,6 +8743,7 @@
         }
 
         currentUser = { uid: user.uid, email: user.email, name: user.displayName || "User", role: role };
+        window.currentUser = currentUser;
 
         if (role === 'admin') {
           document.getElementById('nav-auth-buttons').innerHTML = `
@@ -8758,36 +8759,9 @@
         if (mobileAuthLinks) mobileAuthLinks.classList.add('hidden');
 
         // INJECT THE RIGHT-TO-LEFT SEQUENCE: Order Tracking -> Cart -> Mobile Menu -> Profile Dropdown
-        document.getElementById('nav-auth-buttons').innerHTML = `
-                <button id="header-nav-orders-btn" onclick="switchView('orders-tracking')" class="p-2 md:p-2.5 rounded-xl text-charcoal bg-editorbg border border-sand hover:border-charcoal hover:bg-sand/30 transition flex items-center justify-center relative shadow-sm mr-1 md:mr-1.5" title="My Orders">
-                    <i data-lucide="package" class="w-4 h-4 text-flame"></i>
-                </button>
-                <button id="header-nav-cart-btn" onclick="toggleModal('cart-modal')" class="p-2 md:p-2.5 rounded-xl text-charcoal bg-editorbg border border-sand hover:border-charcoal hover:bg-sand/30 transition flex items-center justify-center relative shadow-sm mr-1 md:mr-1">
-                    <i data-lucide="shopping-cart" class="w-4 h-4 text-flame"></i>
-                </button>
-                <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-1 text-charcoal hover:text-flame transition">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-                
-                <div class="relative">
-                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-flame text-cream flex items-center justify-center text-sm md:text-base font-bold shadow-md cursor-pointer shrink-0" onclick="document.getElementById('profile-dropdown-menu').classList.toggle('hidden')" title="Profile Menu">
-                        ${currentUser.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div id="profile-dropdown-menu" class="hidden absolute right-0 top-full mt-3 w-56 bg-white border border-sand shadow-xl rounded-2xl py-2 z-[1010]">
-                        <div class="px-4 py-3 border-b border-sand/40 mb-2 bg-editorbg/50">
-                            <p class="text-sm font-black text-charcoal truncate">${currentUser.name}</p>
-                            <p class="text-[10px] font-bold text-slate truncate">${currentUser.email}</p>
-                        </div>
-                        <button onclick="switchView('user-profile'); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full text-left px-5 py-2.5 text-sm font-bold text-charcoal hover:bg-sand/20 hover:text-flame transition flex items-center gap-3"><i data-lucide="user" class="w-4 h-4"></i> My Profile</button>
-                        <button onclick="switchView('dashboard'); switchDashboardTab('projects'); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full text-left px-5 py-2.5 text-sm font-bold text-charcoal hover:bg-sand/20 hover:text-flame transition flex items-center gap-3"><i data-lucide="folder" class="w-4 h-4"></i> My Projects</button>
-                        <button onclick="switchView('orders-tracking'); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full text-left px-5 py-2.5 text-sm font-bold text-charcoal hover:bg-sand/20 hover:text-flame transition flex items-center gap-3"><i data-lucide="package" class="w-4 h-4"></i> My Orders</button>
-                        <button onclick="switchView('user-settings'); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full text-left px-5 py-2.5 text-sm font-bold text-charcoal hover:bg-sand/20 hover:text-flame transition flex items-center gap-3"><i data-lucide="settings" class="w-4 h-4"></i> Settings</button>
-                        <div class="border-t border-sand/40 my-1 pt-1">
-                            <button onclick="handleLogout()" class="w-full text-left px-5 py-2.5 text-sm font-black text-red-600 hover:bg-red-50 transition border-2 border-transparent hover:border-red-200 mx-2 !w-[calc(100%-16px)] rounded-xl flex items-center gap-3"><i data-lucide="log-out" class="w-4 h-4"></i> Log Out</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+        if (window.renderDynamicRightActionButtons) {
+          window.renderDynamicRightActionButtons();
+        }
 
         // Global click listener to close dropdown when clicking outside
         document.addEventListener('click', (e) => {
@@ -8818,6 +8792,7 @@
 
       } else {
         currentUser = null;
+        window.currentUser = null;
         myProjects = [];
         myGallery = [];
         cartItems = [];
@@ -8827,13 +8802,9 @@
         const mobileAuthLinks = document.getElementById('mobile-nav-auth-links');
         if (mobileAuthLinks) mobileAuthLinks.classList.remove('hidden');
 
-        document.getElementById('nav-auth-buttons').innerHTML = `
-                <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-1 text-charcoal hover:text-flame transition">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-                <button onclick="toggleModal('login-modal')" class="hidden md:inline-block px-5 py-2.5 rounded-xl text-sm font-bold text-charcoal hover:bg-sand/30 transition">Log In</button>
-                <button onclick="toggleModal('signup-modal')" class="hidden md:inline-block glass-btn-dark px-5 py-2.5 rounded-xl text-sm font-bold text-cream hover:bg-flame hover:border-flame transition duration-200">Sign Up</button>
-            `;
+        if (window.renderDynamicRightActionButtons) {
+          window.renderDynamicRightActionButtons();
+        }
         lucide.createIcons();
 
         // Protected view routing guard on logout/unauthenticated state
