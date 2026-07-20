@@ -802,6 +802,9 @@
       background-repeat: no-repeat !important;
       position: relative;
       overflow: hidden;
+      border-radius: 0 !important;
+      outline: 2px solid #000000 !important;
+      outline-offset: -2px !important;
       /* Prevent text selection or dragging of background */
       user-select: none;
       -webkit-user-drag: none;
@@ -1014,8 +1017,10 @@
       padding: 10px;
       box-sizing: border-box;
       margin-bottom: 15px;
-      border-radius: 8px;
-      border: 1px solid rgba(158, 182, 196, 0.2);
+      border-radius: 0;
+      border: none;
+      outline: 2px solid #557282;
+      outline-offset: -2px;
     }
 
     .product-card h3 {
@@ -1790,46 +1795,35 @@
               class="text-flame">Portal</span></span>
         </div>
         <div class="flex md:flex-col gap-2 w-full overflow-y-auto no-scrollbar">
-          <button id="btn-adm-orders" onclick="toggleAdminSection('orders')"
+          <button id="btn-adm-dashboard" onclick="toggleAdminSection('dashboard')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-charcoal text-cream font-bold text-sm shadow-md transition group">
-            <i data-lucide="file-text" class="w-5 h-5 shrink-0"></i>
-            <span class="hidden lg:block">Order Details</span>
+            <i data-lucide="layout-dashboard" class="w-5 h-5 shrink-0"></i>
+            <span class="hidden lg:block">Dashboard</span>
           </button>
-          <button id="btn-adm-customers" onclick="toggleAdminSection('customers')"
+          <button id="btn-adm-orders" onclick="toggleAdminSection('orders')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="users" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Customers</span>
-          </button>
-          <button id="btn-adm-contact-customer" onclick="toggleAdminSection('contact-customer')"
-            class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="mail" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Contact Customer</span>
+            <i data-lucide="package" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
+            <span class="hidden lg:block">Order Management</span>
           </button>
           <button id="btn-adm-products" onclick="toggleAdminSection('products')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="package" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Product Templates</span>
+            <i data-lucide="box" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
+            <span class="hidden lg:block">Product Management</span>
           </button>
-          <button id="btn-adm-assets" onclick="toggleAdminSection('assets')"
+          <button id="btn-adm-sales" onclick="toggleAdminSection('sales')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="plus-circle" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Add Item</span>
-          </button>
-          <button id="btn-adm-manage" onclick="toggleAdminSection('manage')"
-            class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="grid" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Manage Products</span>
-          </button>
-
-          <button id="btn-adm-canceled" onclick="toggleAdminSection('canceled')"
-            class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
-            <i data-lucide="x-octagon" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
-            <span class="hidden lg:block">Canceled Orders</span>
+            <i data-lucide="tag" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
+            <span class="hidden lg:block">Sales Management</span>
           </button>
           <button id="btn-adm-pages" onclick="toggleAdminSection('pages')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
             <i data-lucide="file-text" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
             <span class="hidden lg:block">Page Management</span>
+          </button>
+          <button id="btn-adm-customers" onclick="toggleAdminSection('customers')"
+            class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
+            <i data-lucide="users" class="w-5 h-5 shrink-0 group-hover:text-charcoal"></i>
+            <span class="hidden lg:block">Manage Customers</span>
           </button>
           <button id="btn-adm-settings" onclick="toggleAdminSection('settings')"
             class="flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-sand/30 text-slate font-bold text-sm transition group">
@@ -1847,113 +1841,93 @@
 
     <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto px-6 py-10 max-w-6xl mx-auto w-full">
 
-      <div id="admin-orders-section" class="space-y-6 hidden w-full">
-        <div class="flex gap-2 border-b border-sand/40 pb-4 mb-4">
-          <button onclick="switchAdminOrderTab('list')" id="tab-adm-list"
+      <!-- 1. DASHBOARD SECTION -->
+      <div id="admin-dashboard-section" class="space-y-6 w-full">
+        <h2 class="text-2xl font-extrabold text-charcoal mb-6">Business Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
+            <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Total Revenue</span>
+            <h3 id="finance-total-rev" class="text-3xl font-black text-flame mt-2">0.00</h3>
+          </div>
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
+            <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Total Orders</span>
+            <h3 id="finance-total-orders" class="text-3xl font-black text-charcoal mt-2">0</h3>
+          </div>
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
+            <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Total Customers</span>
+            <h3 id="finance-total-customers" class="text-3xl font-black text-charcoal mt-2">0</h3>
+          </div>
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
+            <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Top City</span>
+            <h3 id="finance-top-city" class="text-3xl font-black text-charcoal mt-2 truncate">-</h3>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm h-80 flex flex-col">
+            <h4 class="text-sm font-extrabold text-charcoal mb-4 shrink-0">Orders by City</h4>
+            <div class="flex-1 min-h-0 relative"><canvas id="cityChart" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+          </div>
+          <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm h-80 flex flex-col">
+            <h4 class="text-sm font-extrabold text-charcoal mb-4 shrink-0">Recent Revenue Trend</h4>
+            <div class="flex-1 min-h-0 relative"><canvas id="revenueChart"
+                class="absolute inset-0 w-full h-full"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ORDER MANAGEMENT SECTION -->
+      <div id="admin-orders-section" class="hidden w-full space-y-6">
+        <div class="flex gap-2 border-b border-sand/40 pb-4">
+          <button onclick="switchAdminSubTab('orders', 'details')" id="tab-orders-details"
             class="px-4 py-2 bg-charcoal text-cream rounded-lg text-xs font-bold transition">Order Details</button>
-          <button onclick="switchAdminOrderTab('finance')" id="tab-adm-finance"
-            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30">Finance
-            & Analytics</button>
+          <button onclick="switchAdminSubTab('orders', 'tracking')" id="tab-orders-tracking"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30">Order
+            Tracking</button>
         </div>
-        <div id="adm-orders-list-view">
-          <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
-            <h2 class="text-2xl font-extrabold text-charcoal mb-6">Global Orders Log</h2>
-            <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
-              <table class="w-full text-left text-sm min-w-max">
-                <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th class="px-6 py-4">Order ID</th>
-                    <th class="px-6 py-4">Design / Dimensions</th>
-                    <th class="px-6 py-4">Date</th>
-                    <th class="px-6 py-4">Amount</th>
-                    <th class="px-6 py-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-orders-table-body" class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-        <div id="adm-orders-finance-view" class="hidden space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
-              <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Total Revenue</span>
-              <h3 id="finance-total-rev" class="text-3xl font-black text-flame mt-2">0.00</h3>
-            </div>
-            <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
-              <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Total Orders</span>
-              <h3 id="finance-total-orders" class="text-3xl font-black text-charcoal mt-2">0</h3>
-            </div>
-            <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm">
-              <span class="text-[10px] font-bold text-slate uppercase tracking-wider">Top City</span>
-              <h3 id="finance-top-city" class="text-3xl font-black text-charcoal mt-2 truncate">-</h3>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm h-80 flex flex-col">
-              <h4 class="text-sm font-extrabold text-charcoal mb-4 shrink-0">Orders by City</h4>
-              <div class="flex-1 min-h-0 relative"><canvas id="cityChart"
-                  class="absolute inset-0 w-full h-full"></canvas></div>
-            </div>
-            <div class="glass-card bg-white p-6 rounded-3xl border border-sand/60 shadow-sm h-80 flex flex-col">
-              <h4 class="text-sm font-extrabold text-charcoal mb-4 shrink-0">Recent Revenue Trend</h4>
-              <div class="flex-1 min-h-0 relative"><canvas id="revenueChart"
-                  class="absolute inset-0 w-full h-full"></canvas></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div id="admin-assets-section" class="hidden max-w-xl mx-auto w-full">
-        <div class="glass-card bg-white p-10 rounded-3xl border-2 border-flame/20 shadow-md relative overflow-hidden">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-8 flex items-center gap-2"><i data-lucide="plus-circle"
-              class="w-6 h-6 text-flame"></i> Add Item</h2>
-          <form id="admin-upload-form" class="space-y-6" onsubmit="handleAdminAssetUpload(event)">
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Asset Category</label>
-              <select id="admin-asset-category"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:border-flame focus:outline-none">
-                <option value="decor">Decoration</option>
-                <option value="textures">BG Textures</option>
+        <!-- Order Details Tab -->
+        <div id="view-orders-details"
+          class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <h2 class="text-2xl font-extrabold text-charcoal">Global Orders Log</h2>
+            <div class="flex gap-3 w-full md:w-auto">
+              <input type="date" id="admin-order-date-filter" onchange="renderAdminOrders()"
+                class="px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-bold text-slate focus:outline-none focus:border-flame">
+              <select id="admin-order-status-filter" onchange="renderAdminOrders()"
+                class="px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-bold text-slate focus:outline-none focus:border-flame cursor-pointer">
+                <option value="ALL">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Order Confirmed">Order Confirmed</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Canceled">Canceled</option>
               </select>
-              <p class="text-[10px] text-slate font-medium mt-2">Frames are managed automatically from Product
-                Templates.</p>
+              <input type="text" id="admin-order-search" oninput="renderAdminOrders()" placeholder="Search ID..."
+                class="px-3 py-2 bg-editorbg border border-sand rounded-lg text-xs font-bold text-slate focus:outline-none focus:border-flame">
             </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Item Price</label>
-              <input type="number" id="admin-asset-cost" placeholder="0.00" step="0.01"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
-                required>
-            </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Upload File</label>
-              <div
-                class="border-2 border-dashed border-sand/80 hover:border-flame transition rounded-xl p-10 text-center cursor-pointer bg-editorbg relative">
-                <input type="file" id="admin-asset-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  required
-                  onchange="document.getElementById('admin-file-name').innerText = this.files[0] ? this.files[0].name : 'Click to Browse'">
-                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto text-slate mb-3"></i>
-                <span id="admin-file-name" class="text-sm font-extrabold text-charcoal block transition-all">Click to
-                  Browse</span>
-              </div>
-            </div>
-            <button type="submit"
-              class="w-full btn-solid-orange py-4 rounded-xl text-cream font-extrabold text-lg shadow-md">Publish
-              Asset</button>
-          </form>
+          </div>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Order ID</th>
+                  <th class="px-6 py-4">Design / Dimensions</th>
+                  <th class="px-6 py-4">Date</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4">Amount</th>
+                  <th class="px-6 py-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-orders-table-body" class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <div id="admin-manage-section" class="hidden w-full">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Manage Products</h2>
-          <div id="admin-manage-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
-        </div>
-      </div>
-
-      <div id="admin-tracking-section" class="hidden w-full">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+        <!-- Order Tracking Tab -->
+        <div id="view-orders-tracking"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
           <h2 class="text-2xl font-extrabold text-charcoal mb-6">Order Tracking Dashboard</h2>
           <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
             <table class="w-full text-left text-sm min-w-max">
@@ -1973,94 +1947,48 @@
         </div>
       </div>
 
-      <div id="admin-canceled-section" class="hidden w-full">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Canceled Orders</h2>
-          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
-            <table class="w-full text-left text-sm min-w-max">
-              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
-                <tr>
-                  <th class="px-6 py-4">Order ID</th>
-                  <th class="px-6 py-4">Customer</th>
-                  <th class="px-6 py-4">Date</th>
-                  <th class="px-6 py-4">Reason for Cancellation</th>
-                </tr>
-              </thead>
-              <tbody id="admin-canceled-table-body" class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
-              </tbody>
-            </table>
-          </div>
+      <!-- 3. PRODUCT MANAGEMENT SECTION -->
+      <div id="admin-products-section" class="hidden w-full space-y-6">
+        <div class="flex gap-2 border-b border-sand/40 pb-4 overflow-x-auto no-scrollbar">
+          <button onclick="switchAdminSubTab('products', 'add-product')" id="tab-products-add-product"
+            class="px-4 py-2 bg-charcoal text-cream rounded-lg text-xs font-bold transition whitespace-nowrap">Add
+            Product</button>
+          <button onclick="switchAdminSubTab('products', 'add-element')" id="tab-products-add-element"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Add
+            Element</button>
+          <button onclick="switchAdminSubTab('products', 'add-category')" id="tab-products-add-category"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Add
+            Category</button>
+          <button onclick="switchAdminSubTab('products', 'manage-category')" id="tab-products-manage-category"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Manage
+            Categories</button>
+          <button onclick="switchAdminSubTab('products', 'manage-product')" id="tab-products-manage-product"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Manage
+            Products</button>
+          <button onclick="switchAdminSubTab('products', 'manage-elements')" id="tab-products-manage-elements"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Manage
+            Elements</button>
         </div>
-      </div>
 
-      <!-- Customers Section -->
-      <div id="admin-customers-section" class="hidden w-full">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Customer Management</h2>
-          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
-            <table class="w-full text-left text-sm min-w-max">
-              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
-                <tr>
-                  <th class="px-6 py-4">User ID</th>
-                  <th class="px-6 py-4">Name</th>
-                  <th class="px-6 py-4">Email</th>
-                  <th class="px-6 py-4">Orders</th>
-                  <th class="px-6 py-4">Joined</th>
-                  <th class="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="admin-customers-table-body" class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contact Customer Section -->
-      <div id="admin-contact-customer-section" class="hidden w-full max-w-2xl mx-auto">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Contact Customer</h2>
-          <form id="contact-customer-form" class="space-y-4">
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Select
-                Customer</label>
-              <select id="contact-customer-select"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:outline-none focus:border-flame focus:ring-1 focus:ring-flame">
-                <option value="">Select a customer...</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Subject</label>
-              <input type="text" id="contact-customer-subject"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame"
-                placeholder="Enter subject">
-            </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Message</label>
-              <textarea id="contact-customer-message" rows="6"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame resize-none"
-                placeholder="Write your message here..."></textarea>
-            </div>
-            <button type="submit"
-              class="w-full btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
-              <i data-lucide="send" class="w-5 h-5"></i> Send Message
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Product Templates Section -->
-      <div id="admin-products-section" class="hidden w-full">
-        <div class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Product Templates</h2>
-          <form id="add-product-form" class="space-y-6 mb-8 pb-8 border-b border-sand/40">
+        <!-- Add Product Tab -->
+        <div id="view-products-add-product" class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Create Product Template</h2>
+          <form id="add-product-form" class="space-y-6">
             <input type="hidden" id="editing-product-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="col-span-1 md:col-span-2">
+              <div class="col-span-1">
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Product Name</label>
                 <input type="text" id="product-name"
                   class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame"
                   required>
+              </div>
+              <div class="col-span-1">
+                <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Category</label>
+                <select id="product-category"
+                  class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame">
+                  <option value="">No Category</option>
+                  <!-- Populated by JS -->
+                </select>
               </div>
               <div>
                 <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Price</label>
@@ -2098,14 +2026,11 @@
                 </div>
               </div>
             </div>
-            <p class="text-[10px] text-flame font-bold mt-2"><i data-lucide="wand-2" class="w-3 h-3 inline"></i> AI will
-              automatically remove the background from your Frame image upon upload!</p>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <section class="bg-editorbg/60 border border-sand/50 rounded-2xl p-4">
                 <div class="flex items-center justify-between gap-3 mb-3">
                   <div>
                     <h3 class="font-extrabold text-charcoal">Available Sizes</h3>
-                    <p class="text-[10px] text-slate">Width and height are required. Display names are optional.</p>
                   </div><button type="button" onclick="addProductSizeRow()"
                     class="px-3 py-1.5 bg-white border border-sand rounded-lg text-xs font-bold text-charcoal hover:border-flame">Add
                     size</button>
@@ -2116,7 +2041,6 @@
                 <div class="flex items-center justify-between gap-3 mb-3">
                   <div>
                     <h3 class="font-extrabold text-charcoal">Available Colours</h3>
-                    <p class="text-[10px] text-slate">Customers can select only these finishes.</p>
                   </div><button type="button" onclick="addProductColourRow()"
                     class="px-3 py-1.5 bg-white border border-sand rounded-lg text-xs font-bold text-charcoal hover:border-flame">Add
                     colour</button>
@@ -2124,21 +2048,320 @@
                 <div id="product-colours-list" class="space-y-2"></div>
               </section>
             </div>
-            <label
-              class="flex items-center gap-3 bg-editorbg/60 border border-sand/50 rounded-xl p-4 cursor-pointer"><input
-                type="checkbox" id="product-dynamic-thickness" class="w-4 h-4 accent-flame"><span><span
-                  class="block font-bold text-charcoal text-sm">Enable Dynamic Thickness</span><span
-                  class="block text-[10px] text-slate mt-0.5">Show the thickness slider for this frame in the
-                  editor.</span></span></label>
+            <label class="flex items-center gap-3 bg-editorbg/60 border border-sand/50 rounded-xl p-4 cursor-pointer">
+              <input type="checkbox" id="product-dynamic-thickness" class="w-4 h-4 accent-flame">
+              <span><span class="block font-bold text-charcoal text-sm">Enable Dynamic Thickness</span></span>
+            </label>
             <button type="submit"
               class="w-full btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
               <i data-lucide="plus-circle" class="w-5 h-5"></i> <span id="product-submit-label">Add Product
                 Template</span>
             </button>
           </form>
+        </div>
 
-          <h3 class="text-xl font-bold text-charcoal mb-4">Existing Products</h3>
-          <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <!-- Add Element Tab -->
+        <div id="view-products-add-element"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-xl mx-auto">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6 flex items-center gap-2"><i data-lucide="image-plus"
+              class="w-6 h-6 text-flame"></i> Add Workspace Asset</h2>
+          <form id="admin-upload-form" class="space-y-6" onsubmit="handleAdminAssetUpload(event)">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Asset Category</label>
+              <select id="admin-asset-category"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:border-flame focus:outline-none">
+                <option value="decor">Decoration</option>
+                <option value="textures">BG Textures</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Item Price</label>
+              <input type="number" id="admin-asset-cost" placeholder="0.00" step="0.01"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
+                required>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Upload File</label>
+              <div
+                class="border-2 border-dashed border-sand/80 hover:border-flame transition rounded-xl p-10 text-center cursor-pointer bg-editorbg relative">
+                <input type="file" id="admin-asset-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  required
+                  onchange="document.getElementById('admin-file-name').innerText = this.files[0] ? this.files[0].name : 'Click to Browse'">
+                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto text-slate mb-3"></i>
+                <span id="admin-file-name" class="text-sm font-extrabold text-charcoal block transition-all">Click to
+                  Browse</span>
+              </div>
+            </div>
+            <button type="submit"
+              class="w-full btn-solid-orange py-4 rounded-xl text-cream font-extrabold text-lg shadow-md">Publish
+              Asset</button>
+          </form>
+        </div>
+
+        <!-- Add Category Tab -->
+        <div id="view-products-add-category"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-xl mx-auto">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6 flex items-center gap-2"><i data-lucide="layers"
+              class="w-6 h-6 text-flame"></i> Add New Category</h2>
+          <form id="admin-add-category-form" class="space-y-6" onsubmit="window.handleAdminCategoryAdd(event)">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Category Name</label>
+              <input type="text" id="cat-name"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
+                required>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Description</label>
+              <textarea id="cat-desc" rows="3"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none resize-none"></textarea>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Cover Photo
+                (Optional)</label>
+              <div
+                class="border-2 border-dashed border-sand/80 hover:border-flame transition rounded-xl p-8 text-center cursor-pointer bg-editorbg relative">
+                <input type="file" id="cat-image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onchange="document.getElementById('cat-file-name').innerText = this.files[0] ? this.files[0].name : 'Browse Image'">
+                <i data-lucide="image" class="w-8 h-8 mx-auto text-slate mb-2"></i>
+                <span id="cat-file-name" class="text-xs font-bold text-charcoal block">Browse Image</span>
+              </div>
+            </div>
+            <button type="submit"
+              class="w-full btn-solid-orange py-4 rounded-xl text-cream font-extrabold text-lg shadow-md">Create
+              Category</button>
+          </form>
+        </div>
+
+        <!-- Manage Categories Tab -->
+        <div id="view-products-manage-category"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Manage Categories</h2>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Cover</th>
+                  <th class="px-6 py-4">Category Name</th>
+                  <th class="px-6 py-4">Description</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-manage-categories-table-body"
+                class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+                <!-- Javascript will populate this -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manage Products Tab -->
+        <div id="view-products-manage-product"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Manage Products</h2>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Image</th>
+                  <th class="px-6 py-4">Product Name</th>
+                  <th class="px-6 py-4">Category</th>
+                  <th class="px-6 py-4">Status / Price</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-manage-products-table-body"
+                class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+                <!-- Javascript will populate this -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manage Elements Tab -->
+        <div id="view-products-manage-elements"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Manage Elements</h2>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Image</th>
+                  <th class="px-6 py-4">Type</th>
+                  <th class="px-6 py-4">Status / Price</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-manage-elements-table-body"
+                class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+                <!-- Javascript will populate this -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SALES MANAGEMENT SECTION -->
+      <div id="admin-sales-section" class="hidden w-full space-y-6">
+        <div class="flex gap-2 border-b border-sand/40 pb-4 overflow-x-auto no-scrollbar">
+          <button onclick="switchAdminSubTab('sales', 'category')" id="tab-sales-category"
+            class="px-4 py-2 bg-charcoal text-cream rounded-lg text-xs font-bold transition whitespace-nowrap">Sale on
+            Category</button>
+          <button onclick="switchAdminSubTab('sales', 'product')" id="tab-sales-product"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Sale
+            on Product</button>
+          <button onclick="switchAdminSubTab('sales', 'manage')" id="tab-sales-manage"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30 whitespace-nowrap">Manage
+            Sales</button>
+        </div>
+
+        <!-- Sale on Category Tab -->
+        <div id="view-sales-category"
+          class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-xl mx-auto">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Category Sales</h2>
+          <form class="space-y-5" onsubmit="window.applyCategorySale(event)">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Select
+                Category</label>
+              <select id="sales-category-select"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:border-flame focus:outline-none"
+                required>
+                <option value="">-- Choose Category --</option>
+                <!-- populated by JS -->
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Discount Percentage
+                (%)</label>
+              <input type="number" id="sales-cat-discount" placeholder="e.g. 15"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
+                required>
+            </div>
+            <button type="submit"
+              class="w-full btn-solid-orange py-3.5 rounded-xl font-extrabold text-sm shadow-md">Apply Sale to
+              Category</button>
+          </form>
+        </div>
+
+        <!-- Sale on Product Tab -->
+        <div id="view-sales-product"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-xl mx-auto">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Apply Product Sale</h2>
+          <form class="space-y-5" onsubmit="window.applyProductSale(event)">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Select Product</label>
+              <select id="sales-product-select"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:border-flame focus:outline-none"
+                required>
+                <option value="">-- Choose Product --</option>
+                <!-- populated by JS -->
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Discount Percentage
+                  (%)</label>
+                <input type="number" id="sales-prod-discount" placeholder="e.g. 15"
+                  class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Or Fixed Sale
+                  Price</label>
+                <input type="number" id="sales-prod-fixed" step="0.01" placeholder="e.g. 39.99"
+                  class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none">
+              </div>
+            </div>
+            <p class="text-[10px] text-slate font-bold">Use either percentage OR fixed price.</p>
+            <button type="submit"
+              class="w-full btn-solid-orange py-3.5 rounded-xl font-extrabold text-sm shadow-md">Apply Sale
+              Pricing</button>
+          </form>
+        </div>
+
+        <!-- Manage Sales Tab -->
+        <div id="view-sales-manage"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Manage Active Sales</h2>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Applied To</th>
+                  <th class="px-6 py-4">Original Price</th>
+                  <th class="px-6 py-4">Sale Details</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-manage-sales-table-body"
+                class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+                <!-- Javascript will populate this -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. MANAGE CUSTOMERS SECTION -->
+      <div id="admin-customers-section" class="hidden w-full space-y-6">
+        <div class="flex gap-2 border-b border-sand/40 pb-4">
+          <button onclick="switchAdminSubTab('customers', 'list')" id="tab-customers-list"
+            class="px-4 py-2 bg-charcoal text-cream rounded-lg text-xs font-bold transition">Customers List</button>
+          <button onclick="switchAdminSubTab('customers', 'contact')" id="tab-customers-contact"
+            class="px-4 py-2 bg-editorbg text-slate border border-sand rounded-lg text-xs font-bold transition hover:bg-sand/30">Contact
+            Customer</button>
+        </div>
+
+        <!-- Customer List Tab -->
+        <div id="view-customers-list"
+          class="glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm w-full">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Customer Registry</h2>
+          <div class="overflow-x-auto border border-sand/50 rounded-2xl w-full">
+            <table class="w-full text-left text-sm min-w-max">
+              <thead class="bg-editorbg text-slate font-bold uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">User ID</th>
+                  <th class="px-6 py-4">Name</th>
+                  <th class="px-6 py-4">Email</th>
+                  <th class="px-6 py-4">Orders</th>
+                  <th class="px-6 py-4">Joined</th>
+                  <th class="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-customers-table-body" class="divide-y divide-sand/40 bg-white font-medium text-charcoal">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Contact Customer Tab -->
+        <div id="view-customers-contact"
+          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-2xl">
+          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Direct Communication</h2>
+          <form id="contact-customer-form" class="space-y-4">
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Select
+                Customer</label>
+              <select id="contact-customer-select"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:outline-none focus:border-flame">
+                <option value="">Select a customer...</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Subject</label>
+              <input type="text" id="contact-customer-subject"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
+                placeholder="Enter subject">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Message</label>
+              <textarea id="contact-customer-message" rows="6"
+                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none resize-none"
+                placeholder="Write your message here..."></textarea>
+            </div>
+            <button type="submit"
+              class="w-full btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-5 h-5"></i> Send Message
+            </button>
+          </form>
         </div>
       </div>
 
@@ -5153,10 +5376,46 @@
     let productTemplates = [];
     let uploadedProductImages = [];
 
-    // --- ADMIN: Toggle Admin Section ---
+    // Global variable for categories and active sales tracking
+    let globalCategories = [];
+
+    // --- ADMIN: Dynamic Sub-Tab Switching Logic ---
+    window.switchAdminSubTab = (parent, tab) => {
+      document.querySelectorAll(`[id^="tab-${parent}-"]`).forEach(btn => {
+        btn.classList.replace('bg-charcoal', 'bg-editorbg');
+        btn.classList.replace('text-cream', 'text-slate');
+      });
+      document.querySelectorAll(`[id^="view-${parent}-"]`).forEach(view => {
+        view.classList.add('hidden');
+      });
+
+      const activeBtn = document.getElementById(`tab-${parent}-${tab}`);
+      const activeView = document.getElementById(`view-${parent}-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.replace('bg-editorbg', 'bg-charcoal');
+        activeBtn.classList.replace('text-slate', 'text-cream');
+      }
+      if (activeView) activeView.classList.remove('hidden');
+
+      // Specific Loaders for Tabs
+      if (parent === 'products') {
+        if (tab === 'manage-product') loadAdminManageProductsTable();
+        if (tab === 'manage-elements') loadAdminManageElementsTable();
+        if (tab === 'manage-category') loadCategoriesTable();
+        if (tab === 'add-product') populateProductCategoryDropdown();
+      }
+      if (parent === 'sales') {
+        if (tab === 'product') populateSalesProductsDropdown();
+        if (tab === 'category') populateSalesCategoryDropdown();
+        if (tab === 'manage') loadAdminManageSales();
+      }
+      if (parent === 'customers' && tab === 'contact') loadCustomersForContact();
+    };
+
+    // --- ADMIN: Toggle Primary Admin Section ---
     async function toggleAdminSection(section) {
       // Hide all sections and reset button styles
-      const sections = ['orders', 'customers', 'contact-customer', 'products', 'assets', 'manage', 'tracking', 'canceled', 'settings', 'pages'];
+      const sections = ['dashboard', 'orders', 'products', 'sales', 'pages', 'customers', 'settings'];
 
       sections.forEach(sec => {
         const el = document.getElementById(`admin-${sec}-section`);
@@ -5169,42 +5428,450 @@
         }
       });
 
-      // Show selected section
       const selectedSection = document.getElementById(`admin-${section}-section`);
       if (selectedSection) selectedSection.classList.remove('hidden');
 
-      // Highlight active button
       const activeBtn = document.getElementById(`btn-adm-${section}`);
       if (activeBtn) {
         activeBtn.classList.remove('hover:bg-sand/30', 'text-slate');
         activeBtn.classList.add('bg-charcoal', 'text-cream', 'shadow-md');
       }
 
-      // Load data for specific sections
-      if (section === 'customers') await loadCustomers();
-      if (section === 'contact-customer') await loadCustomersForContact();
-      if (section === 'products') await loadProductTemplates();
-      if (section === 'settings') await loadSettings();
-      if (section === 'manage') await loadAdminManageAssets();
+      // Loaders mapping
+      if (section === 'dashboard') {
+        await window.fetchGlobalOrders();
+        renderFinanceDashboard();
+        // Calculate Total Customers for Dashboard
+        const userSnap = await db.collection('users').where('role', '==', 'user').get();
+        document.getElementById('finance-total-customers').innerText = userSnap.size;
+      }
       if (section === 'orders') {
         await window.fetchGlobalOrders();
-        if (globalOrders.length === 0) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          await window.fetchGlobalOrders();
-        }
         renderAdminOrders();
-        renderFinanceDashboard();
+        if (typeof renderAdminTracking === 'function') renderAdminTracking();
       }
-      if (section === 'tracking') {
-        await window.fetchGlobalOrders();
-        renderAdminTracking();
+      if (section === 'products') await loadProductTemplates();
+      if (section === 'sales') {
+        await window.populateSalesCategoryDropdown();
+        // Ensure products are loaded before populating the product dropdown
+        if (productTemplates.length === 0) await loadProductTemplates();
+        window.populateSalesProductsDropdown();
       }
-      if (section === 'canceled') {
-        await window.fetchGlobalOrders();
-        renderAdminCanceled();
-      }
+      if (section === 'customers') await loadCustomers();
+      if (section === 'settings') await loadSettings();
       if (section === 'pages') await loadDynamicPagesTable();
     }
+
+    // --- ADMIN: Render Main Orders Table (With Filters) ---
+    window.renderAdminOrders = () => {
+      const tbody = document.getElementById('admin-orders-table-body');
+      if (!tbody) return;
+
+      const dateFilter = document.getElementById('admin-order-date-filter')?.value;
+      const statusFilter = document.getElementById('admin-order-status-filter')?.value || 'ALL';
+      const searchFilter = document.getElementById('admin-order-search')?.value.toLowerCase() || '';
+
+      let filteredOrders = globalOrders.filter(o => {
+        let match = true;
+        if (searchFilter && (!o.id || !o.id.toLowerCase().includes(searchFilter))) match = false;
+        if (statusFilter !== 'ALL' && o.status !== statusFilter) match = false;
+        if (dateFilter) {
+          const filterDateObj = new Date(dateFilter).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          if (o.date !== filterDateObj) match = false;
+        }
+        return match;
+      });
+
+      if (filteredOrders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-slate font-bold">No orders found matching criteria.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredOrders.map(o => {
+        const itemName = (o.orderedProducts && o.orderedProducts.length > 0) ? o.orderedProducts[0].title : 'Custom Frame';
+        let safeTotal = typeof o.total === 'string' ? parseFloat(o.total.replace(/[^0-9.]/g, '')) || 0 : (typeof o.total === 'number' ? o.total : 0);
+        let badgeColor = o.status === 'Delivered' ? 'text-green-600 bg-green-50' : (o.status === 'Canceled' ? 'text-red-600 bg-red-50' : 'text-slate bg-sand/30');
+
+        return `
+        <tr class="hover:bg-sand/10 transition border-b border-sand/30">
+          <td class="px-6 py-4 font-black">${o.id || 'N/A'}</td>
+          <td class="px-6 py-4">${itemName}</td>
+          <td class="px-6 py-4 text-slate text-xs">${o.date || 'N/A'}</td>
+          <td class="px-6 py-4"><span class="px-2 py-1 rounded font-bold text-[10px] uppercase ${badgeColor}">${o.status}</span></td>
+          <td class="px-6 py-4 font-bold text-flame">${window.appCurrency || '$'}${safeTotal.toFixed(2)}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="viewOrderDetails('${o.id}')" class="px-3 py-1.5 bg-editorbg hover:bg-sand/40 border border-sand rounded-lg text-xs font-bold text-charcoal transition">View Details</button>
+          </td>
+        </tr>
+        `;
+      }).join('');
+    };
+
+    // --- ADMIN: Categories Logic ---
+    window.loadCategoriesData = async () => {
+      try {
+        const snap = await db.collection('categories').orderBy('createdAt', 'desc').get();
+        globalCategories = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (e) {
+        console.error("Error fetching categories:", e);
+      }
+    };
+
+    window.populateProductCategoryDropdown = async () => {
+      await loadCategoriesData();
+      const select = document.getElementById('product-category');
+      if (!select) return;
+      select.innerHTML = '<option value="">No Category</option>' + globalCategories.map(c => `
+        <option value="${c.id}">${c.name}</option>
+      `).join('');
+    };
+
+    window.populateSalesCategoryDropdown = async () => {
+      await loadCategoriesData();
+      const select = document.getElementById('sales-category-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Choose Category --</option>' + globalCategories.map(c => `
+        <option value="${c.id}">${c.name}</option>
+      `).join('');
+    };
+
+    window.handleAdminCategoryAdd = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('cat-name').value;
+      const desc = document.getElementById('cat-desc').value;
+      const file = document.getElementById('cat-image').files[0];
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader" class="w-5 h-5 animate-spin inline-block"></i> Creating...`;
+      btn.disabled = true;
+
+      try {
+        let imgUrl = '';
+        if (file) {
+          showToast("Uploading Cover Photo...");
+          imgUrl = await uploadToCloudinary(file);
+        }
+        await db.collection('categories').add({ name, desc, imageURL: imgUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        showToast("Category Added Successfully!");
+        e.target.reset();
+        document.getElementById('cat-file-name').innerText = "Browse Image";
+
+        // Refresh the underlying data AND update the table UI
+        await loadCategoriesData();
+        if (document.getElementById('admin-manage-categories-table-body')) {
+          window.loadCategoriesTable();
+        }
+      } catch (error) {
+        showToast("Error adding category: " + error.message);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    };
+
+    window.loadCategoriesTable = async () => {
+      await loadCategoriesData();
+      const tbody = document.getElementById('admin-manage-categories-table-body');
+      if (!tbody) return;
+
+      if (globalCategories.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-slate font-bold">No categories exist yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = globalCategories.map(c => `
+        <tr class="hover:bg-sand/10 transition border-b border-sand/30">
+          <td class="px-6 py-4">
+            ${c.imageURL ? `<img src="${c.imageURL}" class="w-12 h-12 object-cover rounded-lg border border-sand shadow-sm">` : `<div class="w-12 h-12 bg-editorbg border border-sand rounded-lg flex items-center justify-center text-slate"><i data-lucide="image" class="w-5 h-5"></i></div>`}
+          </td>
+          <td class="px-6 py-4 font-bold text-charcoal">${c.name}</td>
+          <td class="px-6 py-4 text-xs text-slate max-w-xs truncate">${c.desc || 'No description'}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="deleteCategory('${c.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 transition">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    };
+
+    window.deleteCategory = async (id) => {
+      if (confirm("Are you sure you want to delete this category? This will NOT delete the associated products.")) {
+        try {
+          await db.collection('categories').doc(id).delete();
+          showToast("Category deleted.");
+          loadCategoriesTable();
+        } catch (e) {
+          showToast("Error deleting: " + e.message);
+        }
+      }
+    };
+
+    // --- ADMIN: Product & Elements Tables with Out of Stock Logic ---
+    window.loadAdminManageProductsTable = async () => {
+      const tbody = document.getElementById('admin-manage-products-table-body');
+      if (!tbody) return;
+
+      if (globalCategories.length === 0) await loadCategoriesData();
+
+      tbody.innerHTML = productTemplates.map(p => {
+        const cat = globalCategories.find(c => c.id === p.categoryId);
+        const catName = cat ? cat.name : 'Uncategorized';
+
+        let statusBadge = p.outOfStock ? `<span class="px-2 py-1 rounded bg-red-100 text-red-800 text-[10px] font-black uppercase tracking-wider block mb-1">Out of Stock</span>` : `<span class="px-2 py-1 rounded bg-green-100 text-green-800 text-[10px] font-black uppercase tracking-wider block mb-1">In Stock</span>`;
+        let priceString = p.saleActive ? `<span class="line-through text-slate text-xs">${window.appCurrency || '$'}${p.price.toFixed(2)}</span> <span class="text-flame font-bold">${window.appCurrency || '$'}${p.salePrice.toFixed(2)}</span>` : `<span class="text-flame font-bold">${window.appCurrency || '$'}${p.price.toFixed(2)}</span>`;
+
+        return `
+        <tr class="hover:bg-sand/10 transition border-b border-sand/30">
+          <td class="px-6 py-4"><img src="${p.images ? p.images[0] : (p.frameImage || '')}" class="w-12 h-12 object-contain rounded border border-sand bg-white p-1"></td>
+          <td class="px-6 py-4 font-bold text-charcoal">${p.name}</td>
+          <td class="px-6 py-4 text-xs font-semibold text-slate uppercase">${catName}</td>
+          <td class="px-6 py-4">${statusBadge} ${priceString}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="toggleProductStock('${p.id}', ${!!p.outOfStock})" class="px-3 py-1.5 ${p.outOfStock ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'} border rounded-lg text-xs font-bold transition mr-1 mb-1 sm:mb-0 w-24">
+              ${p.outOfStock ? 'Mark In Stock' : 'Mark OOS'}
+            </button>
+            <button onclick="switchAdminSubTab('products', 'add-product'); editProduct('${p.id}')" class="px-3 py-1.5 bg-editorbg hover:bg-sand/40 border border-sand rounded-lg text-xs font-bold text-charcoal transition mr-1">Edit</button>
+            <button onclick="deleteProduct('${p.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 transition">Delete</button>
+          </td>
+        </tr>
+      `}).join('');
+    };
+
+    window.toggleProductStock = async (id, currentOos) => {
+      const newState = !currentOos;
+      if (confirm(`Mark this product as ${newState ? 'Out of Stock' : 'In Stock'}?`)) {
+        try {
+          await db.collection('products').doc(id).update({ outOfStock: newState });
+          showToast(`Product is now ${newState ? 'Out of Stock' : 'In Stock'}`);
+          await loadProductTemplates();
+          loadAdminManageProductsTable();
+        } catch (e) {
+          showToast("Error updating stock: " + e.message);
+        }
+      }
+    };
+
+    window.loadAdminManageElementsTable = async () => {
+      const tbody = document.getElementById('admin-manage-elements-table-body');
+      if (!tbody) return;
+      const snapshot = await db.collection('assets').orderBy('createdAt', 'desc').get();
+      const assets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(a => a.category !== 'frames');
+
+      if (assets.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-slate font-bold">No assets found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = assets.map(a => {
+        let statusBadge = a.outOfStock ? `<span class="px-2 py-1 rounded bg-red-100 text-red-800 text-[10px] font-black uppercase tracking-wider block mb-1">Out of Stock</span>` : `<span class="px-2 py-1 rounded bg-green-100 text-green-800 text-[10px] font-black uppercase tracking-wider block mb-1">In Stock</span>`;
+        let priceString = a.saleActive ? `<span class="line-through text-slate text-xs">${window.appCurrency || '$'}${a.cost}</span> <span class="text-flame font-bold">${window.appCurrency || '$'}${a.salePrice}</span>` : `<span class="text-flame font-bold">${window.appCurrency || '$'}${a.cost || 0}</span>`;
+
+        return `
+        <tr class="hover:bg-sand/10 transition border-b border-sand/30">
+          <td class="px-6 py-4"><img src="${a.imageURL}" class="w-10 h-10 object-contain rounded border border-sand bg-white p-1"></td>
+          <td class="px-6 py-4 font-bold uppercase text-[10px] text-slate">${a.category}</td>
+          <td class="px-6 py-4">${statusBadge} ${priceString}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="toggleElementStock('${a.id}', ${!!a.outOfStock})" class="px-3 py-1.5 ${a.outOfStock ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'} border rounded-lg text-xs font-bold transition mr-1 mb-1 sm:mb-0 w-24">
+              ${a.outOfStock ? 'Mark In Stock' : 'Mark OOS'}
+            </button>
+            <button onclick="editAdminAssetCost('${a.id}', ${a.cost || 0})" class="px-3 py-1.5 bg-editorbg hover:bg-sand/40 border border-sand rounded-lg text-xs font-bold text-charcoal transition mr-1">Edit Price</button>
+            <button onclick="deleteAdminAsset('${a.id}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 transition">Delete</button>
+          </td>
+        </tr>
+      `}).join('');
+      lucide.createIcons();
+    };
+
+    window.toggleElementStock = async (id, currentOos) => {
+      const newState = !currentOos;
+      if (confirm(`Mark this asset as ${newState ? 'Out of Stock' : 'In Stock'}?`)) {
+        try {
+          await db.collection('assets').doc(id).update({ outOfStock: newState });
+          showToast(`Asset is now ${newState ? 'Out of Stock' : 'In Stock'}`);
+          loadAdminManageElementsTable();
+        } catch (e) {
+          showToast("Error updating stock: " + e.message);
+        }
+      }
+    };
+
+    // --- ADMIN: Sales Management Logic ---
+    window.populateSalesProductsDropdown = () => {
+      const select = document.getElementById('sales-product-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Choose Product --</option>' + productTemplates.map(p => `
+        <option value="${p.id}">${p.name} - ${window.appCurrency || '$'}${p.price}</option>
+      `).join('');
+    };
+
+    window.applyCategorySale = async (e) => {
+      e.preventDefault();
+      const catId = document.getElementById('sales-category-select').value;
+      const discountStr = document.getElementById('sales-cat-discount').value;
+      if (!catId || !discountStr) return;
+
+      const discount = parseFloat(discountStr);
+      const category = globalCategories.find(c => c.id === catId);
+      if (!category) return;
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin inline-block"></i> Processing...`;
+      btn.disabled = true;
+
+      try {
+        const snap = await db.collection('products').where('categoryId', '==', catId).get();
+        const batch = db.batch();
+        let updatedCount = 0;
+
+        snap.forEach(doc => {
+          const prod = doc.data();
+          const salePrice = prod.price - (prod.price * (discount / 100));
+          batch.update(doc.ref, { salePrice: salePrice, saleActive: true, saleDesc: `${discount}% off Category` });
+          updatedCount++;
+        });
+
+        if (updatedCount > 0) {
+          await batch.commit();
+        }
+
+        await db.collection('sales').add({
+          type: 'Category',
+          targetId: catId,
+          targetName: category.name,
+          discountPercent: discount,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast(`Sale applied to ${updatedCount} products in ${category.name}!`);
+        e.target.reset();
+        await loadProductTemplates();
+      } catch (error) {
+        showToast("Error applying sale: " + error.message);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    };
+
+    window.applyProductSale = async (e) => {
+      e.preventDefault();
+      const prodId = document.getElementById('sales-product-select').value;
+      const discountStr = document.getElementById('sales-prod-discount').value;
+      const fixedStr = document.getElementById('sales-prod-fixed').value;
+
+      if (!prodId || (!discountStr && !fixedStr)) {
+        showToast("Select a product and provide either a percentage or fixed price.");
+        return;
+      }
+
+      const product = productTemplates.find(p => p.id === prodId);
+      if (!product) return;
+
+      let salePrice = 0;
+      let descStr = '';
+
+      if (fixedStr) {
+        salePrice = parseFloat(fixedStr);
+        descStr = `Fixed at ${window.appCurrency || '$'}${salePrice.toFixed(2)}`;
+      } else {
+        const disc = parseFloat(discountStr);
+        salePrice = product.price - (product.price * (disc / 100));
+        descStr = `${disc}% Off`;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin inline-block"></i> Applying...`;
+      btn.disabled = true;
+
+      try {
+        await db.collection('products').doc(prodId).update({
+          salePrice: salePrice,
+          saleActive: true,
+          saleDesc: descStr
+        });
+
+        await db.collection('sales').add({
+          type: 'Product',
+          targetId: prodId,
+          targetName: product.name,
+          salePrice: salePrice,
+          descStr: descStr,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast(`Sale successfully applied to ${product.name}!`);
+        e.target.reset();
+        await loadProductTemplates();
+      } catch (error) {
+        showToast("Error applying product sale: " + error.message);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    };
+
+    window.loadAdminManageSales = async () => {
+      const tbody = document.getElementById('admin-manage-sales-table-body');
+      if (!tbody) return;
+
+      try {
+        const snap = await db.collection('sales').orderBy('createdAt', 'desc').get();
+        const sales = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (sales.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-slate font-bold">No active sales right now.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = sales.map(s => `
+          <tr class="hover:bg-sand/10 transition border-b border-sand/30">
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 rounded bg-charcoal text-cream text-[10px] font-black uppercase tracking-wider block w-max mb-1">${s.type}</span>
+              <span class="font-bold text-charcoal">${s.targetName}</span>
+            </td>
+            <td class="px-6 py-4 text-slate text-sm">Varies (See Products)</td>
+            <td class="px-6 py-4 font-bold text-flame">${s.discountPercent ? s.discountPercent + '% Off' : s.descStr}</td>
+            <td class="px-6 py-4 text-right">
+              <button onclick="removeSale('${s.id}', '${s.type}', '${s.targetId}')" class="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-xs font-bold text-red-600 transition">Revoke Sale</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-red-500 font-bold">Error loading sales data.</td></tr>`;
+      }
+    };
+
+    window.removeSale = async (saleId, type, targetId) => {
+      if (confirm(`Remove this ${type} sale? Prices will revert to original.`)) {
+        try {
+          if (type === 'Category') {
+            const snap = await db.collection('products').where('categoryId', '==', targetId).get();
+            const batch = db.batch();
+            snap.forEach(doc => {
+              batch.update(doc.ref, { saleActive: false, salePrice: null, saleDesc: null });
+            });
+            await batch.commit();
+          } else {
+            await db.collection('products').doc(targetId).update({ saleActive: false, salePrice: null, saleDesc: null });
+          }
+
+          await db.collection('sales').doc(saleId).delete();
+
+          showToast("Sale successfully revoked!");
+          await loadProductTemplates();
+          loadAdminManageSales();
+        } catch (e) {
+          showToast("Error revoking sale: " + e.message);
+        }
+      }
+    };
 
     // --- ADMIN: Load Customers ---
     async function loadCustomers() {
@@ -5411,6 +6078,7 @@
           const name = document.getElementById('product-name').value;
           const price = parseFloat(document.getElementById('product-price').value);
           const tax = parseFloat(document.getElementById('product-tax').value || 0);
+          const categoryId = document.getElementById('product-category').value; // Added category
 
           const frameFile = document.getElementById('product-frame-img').files[0];
           const bgFile = document.getElementById('product-bg-img').files[0];
@@ -5457,6 +6125,7 @@
               name,
               price,
               taxRate: tax,
+              categoryId: categoryId || null, // Bind to payload
               frameImage: frameUrl,
               bgImage: bgUrl,
               images: [frameUrl], // Fallback for safety
@@ -5815,27 +6484,39 @@
 
         const productsGrid = document.querySelector('#frames-section .products-grid');
         if (productsGrid && products.length > 0) {
-          productsGrid.innerHTML = products.map(product => `
-             <div class="product-card">
-               ${product.frameImage && product.bgImage
-              ? `<div class="product-preview-container smart-preview-${product.id} relative w-full aspect-square mb-4 bg-editorbg border border-sand/50 flex items-center justify-center p-4 rounded-xl">
-                      <i data-lucide="loader-2" class="w-6 h-6 text-flame animate-spin"></i>
-                    </div>`
-              : `<div class="product-preview-container relative w-full aspect-square mb-4 bg-editorbg border border-sand/50 flex items-center justify-center p-4 rounded-xl">
-                      <img src="${product.images && product.images[0] ? product.images[0] : 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400'}" alt="${product.name}" class="max-w-full max-h-full object-contain drop-shadow-md">
-                    </div>`
-            }
-              <h3>${product.name}</h3>
-              <p>${window.appCurrency || '$'}${product.price.toFixed(2)}</p>
-              <div class="product-actions">
-                 <button class="btn-cart" onclick="window.addStoreItemToCart('${product.name}', ${product.price})">
+          productsGrid.innerHTML = products.map(product => {
+            const hasSale = product.saleActive && product.salePrice != null;
+            const priceHtml = hasSale
+              ? `<span class="line-through text-slate/60 text-sm mr-2">${window.appCurrency || '$'}${product.price.toFixed(2)}</span><span class="text-flame">${window.appCurrency || '$'}${product.salePrice.toFixed(2)}</span>`
+              : `${window.appCurrency || '$'}${product.price.toFixed(2)}`;
+
+            const actionBtnHtml = product.outOfStock
+              ? `<button class="btn-cart opacity-50 cursor-not-allowed w-full !bg-sand/20 !text-slate !border-sand" disabled>Out of Stock</button>`
+              : `<button class="btn-cart" onclick="window.addStoreItemToCart('${product.name}', ${hasSale ? product.salePrice : product.price})">
                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                    Add To Cart
-                 </button>
+                 </button>`;
+
+            return `
+             <div class="product-card relative">
+               ${hasSale ? `<div class="absolute top-2 right-2 bg-flame text-white text-[10px] font-black px-2 py-1 rounded shadow-md z-10 uppercase tracking-wider">Sale</div>` : ''}
+               ${product.frameImage && product.bgImage
+                ? `<div class="product-preview-container smart-preview-${product.id} relative w-full aspect-square mb-4 bg-editorbg border border-sand/50 flex items-center justify-center p-4 rounded-xl">
+                      <i data-lucide="loader-2" class="w-6 h-6 text-flame animate-spin"></i>
+                    </div>`
+                : `<div class="product-preview-container relative w-full aspect-square mb-4 bg-editorbg border border-sand/50 flex items-center justify-center p-4 rounded-xl">
+                      <img src="${product.images && product.images[0] ? product.images[0] : 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400'}" alt="${product.name}" class="max-w-full max-h-full object-contain drop-shadow-md">
+                    </div>`
+              }
+              <h3>${product.name}</h3>
+              <p>${priceHtml}</p>
+              <div class="product-actions">
+                 ${actionBtnHtml}
                  <button class="btn-custom" onclick="window.openProductDetail('${product.id}')">View Details</button>
                </div>
             </div>
-          `).join('');
+          `;
+          }).join('');
         }
 
         // Execute Smart Scanner for Landing
@@ -5885,7 +6566,12 @@
       document.getElementById('product-detail-title').textContent = product.name;
 
       // Set price
-      document.getElementById('product-detail-price').textContent = `${window.appCurrency || '$'}${product.price.toFixed(2)}`;
+      const hasSale = product.saleActive && product.salePrice != null;
+      if (hasSale) {
+        document.getElementById('product-detail-price').innerHTML = `<span class="line-through text-slate/60 text-2xl mr-3">${window.appCurrency || '$'}${product.price.toFixed(2)}</span>${window.appCurrency || '$'}${product.salePrice.toFixed(2)}`;
+      } else {
+        document.getElementById('product-detail-price').textContent = `${window.appCurrency || '$'}${product.price.toFixed(2)}`;
+      }
 
       // Set main image and thumbnails
       const mainImage = document.getElementById('product-detail-main-image');
@@ -5919,7 +6605,8 @@
 
       // Update add to cart button
       document.getElementById('product-detail-cart-btn').onclick = () => {
-        addStoreItemToCart(product.name, product.price);
+        const finalPrice = (product.saleActive && product.salePrice != null) ? product.salePrice : product.price;
+        addStoreItemToCart(product.name, finalPrice);
         toggleModal('product-detail-modal');
       };
 
@@ -6096,7 +6783,7 @@
             frameWrap.style.height = finalH + 'px';
             frameWrap.style.left = frameLeft + 'px';
             frameWrap.style.top = frameTop + 'px';
-            frameWrap.dataset.cost = product.price || 0;
+            frameWrap.dataset.cost = (product.saleActive && product.salePrice != null) ? product.salePrice : (product.price || 0);
             frameWrap.dataset.itemName = product.name;
             frameWrap.dataset.frameRole = 'frame';
             frameWrap.dataset.frameBounds = JSON.stringify({ imgW, imgH, minX, minY, maxX, maxY });
@@ -8135,7 +8822,7 @@
           return;
         }
         window.switchView('admin', false);
-        toggleAdminSection('orders');
+        toggleAdminSection('dashboard');
         window.updateSEOMetadata({
           title: "Admin Operations Dashboard | FrameCraft Studio",
           path: "/admin",
@@ -9232,91 +9919,137 @@
       }
     };
 
-    async function generateOrderConfirmationPdf(order, customization) {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-      pdf.setFillColor(43, 61, 70); pdf.rect(0, 0, 210, 24, 'F');
-      pdf.setTextColor(255, 255, 255); pdf.setFontSize(18); pdf.text('FrameCraft Studio', 14, 15);
-      pdf.setTextColor(43, 61, 70); pdf.setFontSize(14); pdf.text(`Order confirmation - ${order.id}`, 14, 34);
-      let y = 43;
-      try { const canvas = await html2canvas(document.getElementById('design-canvas'), { scale: 1.2, useCORS: true, backgroundColor: '#ffffff' }); const image = canvas.toDataURL('image/jpeg', .88); const ratio = canvas.height / canvas.width; pdf.addImage(image, 'JPEG', 14, y, 74, 74 * ratio); } catch (error) { console.warn('Could not embed editor preview in order PDF.', error); }
-      pdf.setFontSize(10); const detailX = 96;
-      const rows = [['Customer', order.customer], ['Product', customization.product], ['Frame', customization.frame], ['Size', customization.size?.name || 'Original size'], ['Colour', customization.colour?.name || 'Original finish'], ['Thickness', customization.thickness ? `${customization.thickness}%` : 'Standard'], ['Quantity', String(customization.quantity || 1)], ['Payment', `${order.paymentMethod} - ${order.paymentStatus}`]];
-      rows.forEach(([label, value], index) => { pdf.setFont('helvetica', 'bold'); pdf.text(`${label}:`, detailX, y + index * 7); pdf.setFont('helvetica', 'normal'); pdf.text(String(value), detailX + 28, y + index * 7, { maxWidth: 72 }); });
-      y = 126; pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Decor items', 14, y); pdf.setFontSize(10); pdf.setFont('helvetica', 'normal'); pdf.text(customization.decor?.length ? customization.decor.map(item => `${item.name} (${window.appCurrency || '$'}${item.price.toFixed(2)})`).join(', ') : 'None selected', 14, y + 7, { maxWidth: 180 });
-      y = 150; pdf.setFontSize(12); pdf.setFont('helvetica', 'bold'); pdf.text('Pricing breakdown', 14, y); pdf.setFontSize(10); (customization.pricing?.breakdown || []).forEach((item, index) => { pdf.setFont('helvetica', 'normal'); pdf.text(item.name, 14, y + 8 + index * 6); pdf.text(`${window.appCurrency || '$'}${item.cost.toFixed(2)}`, 180, y + 8 + index * 6, { align: 'right' }); });
-      const totalY = y + 14 + (customization.pricing?.breakdown?.length || 0) * 6; pdf.setFont('helvetica', 'bold'); pdf.text(`Customization total: ${window.appCurrency || '$'}${(customization.pricing?.total || 0).toFixed(2)}`, 14, totalY); pdf.text(`Final total: ${order.total}`, 14, totalY + 8);
-      return { blob: pdf.output('blob'), dataUri: pdf.output('datauristring') };
+    async function generateOrderConfirmationPdf(order) {
+      return new Promise((resolve) => {
+        const { jsPDF } = window.jspdf;
+
+        // 1. Create a beautiful off-screen invoice container
+        const invoiceDiv = document.createElement('div');
+        invoiceDiv.style.position = 'absolute';
+        invoiceDiv.style.top = '-9999px';
+        invoiceDiv.style.left = '-9999px';
+        invoiceDiv.style.width = '800px';
+        invoiceDiv.style.backgroundColor = '#ffffff';
+        invoiceDiv.style.padding = '50px';
+        invoiceDiv.style.fontFamily = 'Arial, sans-serif';
+        invoiceDiv.style.color = '#2b3d46';
+
+        const itemsHtml = (order.orderedProducts || []).map(p => `
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #dae5eb; padding: 12px 0;">
+            <div style="font-weight: bold; font-size: 15px;">${p.title} <span style="color:#4a5c66; font-size:13px; font-weight:normal; margin-left: 8px;">Qty: ${p.qty || 1}</span></div>
+            <div style="font-weight: bold; font-size: 15px;">${window.appCurrency || '$'}${(p.cost || 0).toFixed(2)}</div>
+          </div>
+        `).join('');
+
+        const previewImgUrl = order.previewImageURL || 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400';
+
+        invoiceDiv.innerHTML = `
+          <div style="border-bottom: 4px solid #eb5e28; padding-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h1 style="font-size: 38px; font-weight: 900; margin: 0; color: #2b3d46; text-transform: uppercase; letter-spacing: 1px;">FrameCraft</h1>
+              <p style="margin: 5px 0 0 0; color: #4a5c66; font-size: 14px; font-weight: bold;">Bespoke Artisan Framing Studio</p>
+            </div>
+            <div style="text-align: right;">
+              <h2 style="font-size: 28px; font-weight: 900; margin: 0; color: #eb5e28; text-transform: uppercase;">Invoice</h2>
+              <p style="margin: 5px 0 0 0; color: #4a5c66; font-size: 16px; font-weight:bold;">#${order.id}</p>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-top: 40px; gap: 30px;">
+            <div style="flex: 1; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #dae5eb;">
+              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-top:0; margin-bottom: 12px; letter-spacing: 1.5px; font-weight: bold;">Bill To</h3>
+              <p style="margin: 0 0 5px 0; font-weight: 900; font-size:18px; color: #2b3d46;">${order.customer}</p>
+              <p style="margin: 0 0 5px 0; font-size:14px; color:#4a5c66;">${order.email}</p>
+              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;">${order.phone}</p>
+              <p style="margin: 0 0 0 0; font-size:14px; color:#4a5c66; line-height:1.5;">${order.address}</p>
+            </div>
+            <div style="flex: 1; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #dae5eb;">
+              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-top:0; margin-bottom: 12px; letter-spacing: 1.5px; font-weight: bold;">Order Details</h3>
+              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Order Date:</strong> ${order.date}</p>
+              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Payment Method:</strong> ${order.paymentMethod} (${order.paymentStatus})</p>
+              <p style="margin: 0 0 0 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Est. Delivery:</strong> ${order.estimatedDelivery}</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 40px;">
+            <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-bottom: 15px; letter-spacing: 1.5px; font-weight: bold;">Itemized Summary</h3>
+            ${itemsHtml}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+            <div style="flex: 1; margin-right: 40px;">
+              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-bottom: 15px; letter-spacing: 1.5px; font-weight: bold;">Product Preview</h3>
+              <div style="background: #eef3f6; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #dae5eb;">
+                 <img src="${previewImgUrl}" crossorigin="anonymous" style="max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              </div>
+            </div>
+            
+            <div style="width: 320px;">
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; color:#4a5c66;">
+                <span>Subtotal:</span> <span>${window.appCurrency || '$'}${(order.baseAmount || 0).toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; color:#4a5c66;">
+                <span>Shipping:</span> <span>${window.appCurrency || '$'}${(order.shippingCharges || 0).toFixed(2)}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 22px; font-weight: 900; border-top: 2px solid #2b3d46; margin-top: 10px; color: #eb5e28;">
+                <span>Grand Total:</span> <span>${order.total}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 60px; text-align: center; color: #9eb6c4; font-size: 13px; border-top: 1px solid #dae5eb; padding-top: 25px; line-height: 1.6;">
+            <p style="margin:0; font-weight:bold; color: #4a5c66;">Thank you for shopping with FrameCraft Studio!</p>
+            <p style="margin:5px 0 0 0;">If you have any questions concerning this invoice, please contact us at <strong>hello@framecraft.studio</strong></p>
+          </div>
+        `;
+
+        document.body.appendChild(invoiceDiv);
+
+        const imgElement = invoiceDiv.querySelector('img');
+
+        const finalizePdf = async () => {
+          try {
+            await new Promise(r => setTimeout(r, 100)); // Allow DOM layout to settle
+            const canvas = await html2canvas(invoiceDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            document.body.removeChild(invoiceDiv);
+
+            resolve({
+              blob: pdf.output('blob'),
+              dataUri: pdf.output('datauristring')
+            });
+          } catch (e) {
+            console.error("PDF Generation error:", e);
+            document.body.removeChild(invoiceDiv);
+            resolve(null);
+          }
+        };
+
+        if (imgElement) {
+          if (imgElement.complete && imgElement.naturalHeight !== 0) {
+            finalizePdf();
+          } else {
+            imgElement.onload = finalizePdf;
+            imgElement.onerror = finalizePdf;
+            setTimeout(finalizePdf, 3000); // safety fallback
+          }
+        } else {
+          finalizePdf();
+        }
+      });
     }
+
     window.downloadLastOrderPdf = () => {
       if (!window.lastOrderPdf?.blob) return showToast('Your order PDF is not available yet.');
-      const link = document.createElement('a'); link.href = URL.createObjectURL(window.lastOrderPdf.blob); link.download = window.lastOrderPdf.filename; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    };
-
-    async function generateOrderConfirmationPdf(order) {
-      const { jsPDF } = window.jspdf;
-
-      // 1. Order Details PDF
-      const detailsPdf = new jsPDF({ unit: 'mm', format: 'a4' });
-      detailsPdf.setFillColor(43, 61, 70); detailsPdf.rect(0, 0, 210, 24, 'F');
-      detailsPdf.setTextColor(255, 255, 255); detailsPdf.setFontSize(18); detailsPdf.text('FrameCraft Studio', 14, 15);
-      detailsPdf.setTextColor(43, 61, 70); detailsPdf.setFontSize(14); detailsPdf.text(`Order Details - ${order.id}`, 14, 34);
-
-      let y = 45;
-      detailsPdf.setFontSize(10); const detailX = 14;
-      const rows = [
-        ['Customer', order.customer],
-        ['Email', order.email],
-        ['Address', order.address],
-        ['Payment', `${order.paymentMethod} - ${order.paymentStatus}`]
-      ];
-      rows.forEach(([label, value], index) => {
-        detailsPdf.setFont('helvetica', 'bold');
-        detailsPdf.text(`${label}:`, detailX, y + index * 7);
-        detailsPdf.setFont('helvetica', 'normal');
-        detailsPdf.text(String(value), detailX + 28, y + index * 7, { maxWidth: 150 });
-      });
-
-      y = y + (rows.length * 7) + 10;
-      detailsPdf.setFontSize(12); detailsPdf.setFont('helvetica', 'bold'); detailsPdf.text('Items Ordered', 14, y);
-      detailsPdf.setFontSize(10);
-
-      (order.orderedProducts || []).forEach((item, index) => {
-        detailsPdf.setFont('helvetica', 'normal');
-        detailsPdf.text(`${item.title} (x${item.qty})`, 14, y + 8 + index * 6);
-        detailsPdf.text(`${window.appCurrency || '$'}${item.cost.toFixed(2)}`, 180, y + 8 + index * 6, { align: 'right' });
-      });
-
-      const totalY = y + 14 + (order.orderedProducts?.length || 0) * 6;
-      detailsPdf.setFont('helvetica', 'bold');
-      detailsPdf.text(`Shipping: ${window.appCurrency || '$'}${(order.shippingCharges || 0).toFixed(2)}`, 14, totalY);
-      detailsPdf.text(`Grand Total: ${order.total}`, 14, totalY + 8);
-
-      // 2. Design Photo PDF
-      const photoPdf = new jsPDF({ unit: 'mm', format: 'a4' });
-      photoPdf.setFillColor(43, 61, 70); photoPdf.rect(0, 0, 210, 24, 'F');
-      photoPdf.setTextColor(255, 255, 255); photoPdf.setFontSize(18); photoPdf.text('FrameCraft Studio', 14, 15);
-      photoPdf.setTextColor(43, 61, 70); photoPdf.setFontSize(14); photoPdf.text(`Design Photo - ${order.id}`, 14, 34);
-      try {
-        const canvas = await html2canvas(document.getElementById('design-canvas'), { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
-        const image = canvas.toDataURL('image/jpeg', 0.9);
-        const ratio = canvas.height / canvas.width;
-        photoPdf.addImage(image, 'JPEG', 14, 45, 182, 182 * ratio);
-      } catch (error) { console.warn('Could not embed editor preview in order PDF.', error); }
-
-      return {
-        detailsBlob: detailsPdf.output('blob'),
-        detailsDataUri: detailsPdf.output('datauristring'),
-        photoBlob: photoPdf.output('blob'),
-        photoDataUri: photoPdf.output('datauristring')
-      };
-    }
-
-    window.downloadLastOrderPdf = () => {
-      if (!window.lastOrderPdf?.detailsBlob) return showToast('Your order PDFs are not available yet.');
-      const link1 = document.createElement('a'); link1.href = URL.createObjectURL(window.lastOrderPdf.detailsBlob); link1.download = window.lastOrderPdf.filename; link1.click();
-      const link2 = document.createElement('a'); link2.href = URL.createObjectURL(window.lastOrderPdf.photoBlob); link2.download = window.lastOrderPdf.photoFilename; link2.click();
-      setTimeout(() => { URL.revokeObjectURL(link1.href); URL.revokeObjectURL(link2.href); }, 1000);
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(window.lastOrderPdf.blob);
+      link.download = window.lastOrderPdf.filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     };
 
     async function processFinalCheckoutOrderCreation(method, paymentStatus, meta) {
@@ -9336,6 +10069,18 @@
       const orderId = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
       const estDeliveryTimestampString = new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
+      // Automatically capture the user's live editor workspace if they are purchasing from the builder
+      let activePreviewUrl = 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400';
+      if (window.isDirectBuyCheckout) {
+        try {
+          const editorCanvas = document.getElementById('design-canvas');
+          const canvasShot = await html2canvas(editorCanvas, { scale: 1, useCORS: true });
+          activePreviewUrl = canvasShot.toDataURL('image/jpeg', 0.8);
+        } catch (e) { }
+      } else if (cartItems.length > 0) {
+        activePreviewUrl = cartItems[0].imageURL || activePreviewUrl;
+      }
+
       const structuredDatabaseOrderRecordPayload = {
         id: orderId,
         uid: currentUser ? currentUser.uid : 'GUEST-AUTHENTICATION-CONTEXT',
@@ -9346,7 +10091,7 @@
         email: email,
         phone: phone,
         address: address,
-        previewImageURL: window.isDirectBuyCheckout !== true && cartItems.length > 0 ? (cartItems[0].imageURL || '') : 'https://via.placeholder.com/400x500?text=Bespoke+Frame',
+        previewImageURL: activePreviewUrl,
 
         orderedProducts: cartItems.length > 0 ? cartItems.map(i => ({ title: i.title, cost: parseFloat(i.cost) || 0, qty: 1 })) : [{ title: title, cost: basePriceRaw, qty: 1 }],
         baseAmount: basePriceRaw,
@@ -9365,8 +10110,7 @@
       };
 
       const orderPdf = await generateOrderConfirmationPdf(structuredDatabaseOrderRecordPayload);
-      structuredDatabaseOrderRecordPayload.detailsFileName = `FrameCraft-Details-${orderId}.pdf`;
-      structuredDatabaseOrderRecordPayload.photoFileName = `FrameCraft-Photo-${orderId}.pdf`;
+      structuredDatabaseOrderRecordPayload.pdfFileName = `FrameCraft-Invoice-${orderId}.pdf`;
 
       await db.collection('orders').doc(orderId).set(structuredDatabaseOrderRecordPayload);
 
@@ -9393,16 +10137,13 @@
         `;
 
       try {
-        // Note: Make sure your EmailJS Template accepts {{photo_attachment}}!
         await emailjs.send('service_ia6xjfs', 'template_72upsy8', {
           customer_email: email,
           to_name: name,
           title: `Order Validation Summary Confirmation - #${orderId}`,
           message: emailTemplateAggregationOutputBlock,
-          pdf_filename: structuredDatabaseOrderRecordPayload.detailsFileName,
-          pdf_attachment: orderPdf.detailsDataUri,
-          photo_filename: structuredDatabaseOrderRecordPayload.photoFileName,
-          photo_attachment: orderPdf.photoDataUri
+          pdf_filename: structuredDatabaseOrderRecordPayload.pdfFileName,
+          pdf_attachment: orderPdf ? orderPdf.dataUri : ''
         });
 
         await emailjs.send('service_ia6xjfs', 'template_72upsy8', {
@@ -9410,10 +10151,8 @@
           to_name: 'Studio Management Admin',
           title: `ALERT: New Order Received - #${orderId}`,
           message: emailTemplateAggregationOutputBlock,
-          pdf_filename: structuredDatabaseOrderRecordPayload.detailsFileName,
-          pdf_attachment: orderPdf.detailsDataUri,
-          photo_filename: structuredDatabaseOrderRecordPayload.photoFileName,
-          photo_attachment: orderPdf.photoDataUri
+          pdf_filename: structuredDatabaseOrderRecordPayload.pdfFileName,
+          pdf_attachment: orderPdf ? orderPdf.dataUri : ''
         });
       } catch (e) { console.warn("Outbound SMTP relay dropped payload packet.", e); }
 
@@ -9425,7 +10164,9 @@
       }
 
       cartItems = [];
-      window.lastOrderPdf = { detailsBlob: orderPdf.detailsBlob, photoBlob: orderPdf.photoBlob, filename: structuredDatabaseOrderRecordPayload.detailsFileName, photoFilename: structuredDatabaseOrderRecordPayload.photoFileName };
+      if (orderPdf) {
+        window.lastOrderPdf = { blob: orderPdf.blob, filename: structuredDatabaseOrderRecordPayload.pdfFileName };
+      }
       updateCartUI();
       window.hideGlobalLoader();
 
@@ -9452,7 +10193,7 @@
                     <div class="flex justify-between text-sm font-black"><span>Total Volume Authorized:</span><span class="text-flame">${window.appCurrency || '$'}${structuralGrandTotal.toFixed(2)}</span></div>
                 </div>
 
-                <div class="flex flex-wrap justify-center gap-3"><button onclick="downloadLastOrderPdf()" class="bg-charcoal px-6 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg"><i data-lucide="file-down" class="w-4 h-4 inline mr-1"></i> Download Order PDFs</button><button onclick="window.location.reload()" class="btn-solid-orange px-8 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg">Return to Studio Workspace</button></div>
+                <div class="flex flex-wrap justify-center gap-3"><button onclick="downloadLastOrderPdf()" class="bg-charcoal px-6 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg"><i data-lucide="file-down" class="w-4 h-4 inline mr-1"></i> Download Order PDF</button><button onclick="window.location.reload()" class="btn-solid-orange px-8 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg">Return to Studio Workspace</button></div>
             </div>
         `;
       lucide.createIcons();
