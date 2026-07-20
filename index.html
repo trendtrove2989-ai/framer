@@ -2332,36 +2332,53 @@
           </div>
         </div>
 
-        <!-- Contact Customer Tab -->
+        <!-- Contact Customer Tab (Live Chat) -->
         <div id="view-customers-contact"
-          class="hidden glass-card bg-white p-8 rounded-3xl border border-sand/60 shadow-sm max-w-2xl">
-          <h2 class="text-2xl font-extrabold text-charcoal mb-6">Direct Communication</h2>
-          <form id="contact-customer-form" class="space-y-4">
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Select
-                Customer</label>
-              <select id="contact-customer-select"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-charcoal focus:outline-none focus:border-flame">
-                <option value="">Select a customer...</option>
-              </select>
+          class="hidden bg-white rounded-3xl border border-sand/60 shadow-sm w-full h-[650px] overflow-hidden flex flex-row">
+
+          <!-- Left Sidebar: Chat List -->
+          <div class="w-1/3 md:w-80 border-r border-sand/40 bg-editorbg flex flex-col shrink-0">
+            <div class="p-4 border-b border-sand/40 bg-white">
+              <h2 class="text-lg font-extrabold text-charcoal">Customer Chats</h2>
             </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Subject</label>
-              <input type="text" id="contact-customer-subject"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
-                placeholder="Enter subject">
+            <div id="admin-chat-users-list" class="flex-1 overflow-y-auto no-scrollbar">
+              <!-- Populated by JS -->
             </div>
-            <div>
-              <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-2 block">Message</label>
-              <textarea id="contact-customer-message" rows="6"
-                class="w-full px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none resize-none"
-                placeholder="Write your message here..."></textarea>
+          </div>
+
+          <!-- Right Sidebar: Chat Window -->
+          <div class="flex-1 flex flex-col bg-white min-w-0">
+            <div id="admin-chat-header" class="p-4 border-b border-sand/40 bg-editorbg flex items-center gap-3 hidden">
+              <div
+                class="w-10 h-10 rounded-full bg-charcoal text-cream flex items-center justify-center font-bold text-lg"
+                id="admin-active-chat-avatar"></div>
+              <div>
+                <h3 class="font-extrabold text-charcoal leading-tight truncate" id="admin-active-chat-name"></h3>
+                <span class="text-[10px] text-slate font-bold truncate" id="admin-active-chat-email"></span>
+              </div>
             </div>
-            <button type="submit"
-              class="w-full btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
-              <i data-lucide="send" class="w-5 h-5"></i> Send Message
-            </button>
-          </form>
+
+            <div id="admin-chat-empty" class="flex-1 flex flex-col items-center justify-center text-slate">
+              <i data-lucide="message-square" class="w-12 h-12 mb-3 opacity-50"></i>
+              <p class="font-bold">Select a customer to start chatting</p>
+            </div>
+
+            <div id="admin-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 hidden bg-cream/10">
+              <!-- Messages go here -->
+            </div>
+
+            <div id="admin-chat-input-area" class="p-4 border-t border-sand/40 bg-white hidden">
+              <form onsubmit="window.sendAdminChatMessage(event)" class="flex items-center gap-3">
+                <input type="text" id="admin-chat-input"
+                  class="flex-1 px-4 py-3 bg-editorbg border border-sand rounded-xl font-medium focus:border-flame focus:outline-none"
+                  placeholder="Type your message..." autocomplete="off">
+                <button type="submit"
+                  class="w-12 h-12 bg-flame hover:bg-charcoal text-cream rounded-xl flex items-center justify-center transition shadow-md shrink-0">
+                  <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -4965,7 +4982,7 @@
 
     <!-- Frame Context Panel (Desktop Right) -->
     <div id="desktop-frame-panel"
-      class="hidden absolute top-6 right-6 bg-white shadow-xl border border-sand/60 rounded-2xl p-5 w-64 z-40 flex-col gap-4">
+      class="hidden absolute top-20 right-6 bg-white shadow-xl border border-sand/60 rounded-2xl p-5 w-64 z-40 flex-col gap-4">
       <div class="border-b border-sand/40 pb-2 mb-2">
         <h4 class="font-black text-charcoal text-sm flex items-center gap-2"><i data-lucide="frame"
             class="w-4 h-4 text-flame"></i> Frame Styling</h4>
@@ -5913,27 +5930,221 @@
       }
     }
 
-    // --- ADMIN: Load Customers for Contact Dropdown ---
+    // --- LIVE CHAT SYSTEM (USER & ADMIN) ---
+
+    let activeAdminChatUser = null;
+    let adminChatListener = null;
+    let adminUsersListener = null;
+    let userChatListener = null;
+
+    // --- Admin: Initialize Chat List ---
     async function loadCustomersForContact() {
-      const select = document.getElementById('contact-customer-select');
-      if (!select) return;
+      const listContainer = document.getElementById('admin-chat-users-list');
+      if (!listContainer) return;
 
-      try {
-        const snapshot = await db.collection('users').where('role', '==', 'user').get();
-        const customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (adminUsersListener) adminUsersListener(); // Unsubscribe previous
 
-        select.innerHTML = '<option value="">Select a customer...</option>' +
-          customers.map(customer => `<option value="${customer.id}">${customer.name || 'Unnamed'} - ${customer.email}</option>`).join('');
-      } catch (error) {
-        console.error('Error loading customers:', error);
-      }
+      adminUsersListener = db.collection('chat_sessions')
+        .orderBy('lastMessageAt', 'desc')
+        .onSnapshot(async (snapshot) => {
+          const sessions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+          if (sessions.length === 0) {
+            listContainer.innerHTML = '<div class="p-6 text-center text-sm font-bold text-slate">No conversations yet.</div>';
+            return;
+          }
+
+          let html = '';
+          for (const s of sessions) {
+            const unreadCount = s.unreadAdmin || 0;
+            const badge = unreadCount > 0 ? `<span class="bg-green-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shrink-0 shadow-sm">${unreadCount}</span>` : '';
+
+            let time = '';
+            if (s.lastMessageAt) {
+              const date = s.lastMessageAt.toDate ? s.lastMessageAt.toDate() : new Date(s.lastMessageAt);
+              time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            html += `
+               <div onclick="window.openAdminChatForUser('${s.id}', '${(s.userName || '').replace(/'/g, "\\'")}', '${s.userEmail}')" 
+                    class="p-4 border-b border-sand/30 hover:bg-sand/20 cursor-pointer transition flex items-center gap-3 ${activeAdminChatUser === s.id ? 'bg-sand/20 border-l-4 border-l-flame' : 'border-l-4 border-l-transparent'}">
+                  <div class="w-10 h-10 rounded-full bg-charcoal text-cream flex items-center justify-center font-bold shrink-0">${(s.userName || 'U').charAt(0).toUpperCase()}</div>
+                  <div class="flex-1 min-w-0">
+                     <div class="flex justify-between items-baseline mb-1">
+                        <h4 class="text-sm font-bold text-charcoal truncate">${s.userName || 'User'}</h4>
+                        <span class="text-[9px] text-slate font-bold whitespace-nowrap ml-2">${time}</span>
+                     </div>
+                     <p class="text-xs text-slate truncate font-medium">${s.lastMessage || '...'}</p>
+                  </div>
+                  ${badge}
+               </div>
+             `;
+          }
+          listContainer.innerHTML = html;
+          lucide.createIcons();
+        });
     }
 
-    // --- ADMIN: Contact Specific Customer ---
-    function contactSpecificCustomer(customerId, email) {
-      toggleAdminSection('contact-customer');
-      const select = document.getElementById('contact-customer-select');
-      if (select) select.value = customerId;
+    // --- Admin: Open Specific Chat ---
+    window.openAdminChatForUser = (userId, name, email) => {
+      activeAdminChatUser = userId;
+      document.getElementById('admin-chat-empty').classList.add('hidden');
+      document.getElementById('admin-chat-header').classList.remove('hidden');
+      document.getElementById('admin-chat-messages').classList.remove('hidden');
+      document.getElementById('admin-chat-input-area').classList.remove('hidden');
+
+      document.getElementById('admin-active-chat-avatar').innerText = (name || 'U').charAt(0).toUpperCase();
+      document.getElementById('admin-active-chat-name').innerText = name || 'User';
+      document.getElementById('admin-active-chat-email').innerText = email || '';
+
+      // Reset unread count for admin
+      db.collection('chat_sessions').doc(userId).set({ unreadAdmin: 0 }, { merge: true });
+
+      if (adminChatListener) adminChatListener(); // Unsubscribe previous messages
+
+      const msgContainer = document.getElementById('admin-chat-messages');
+
+      adminChatListener = db.collection('chat_sessions').doc(userId).collection('messages')
+        .orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+          msgContainer.innerHTML = snapshot.docs.map(doc => {
+            const msg = doc.data();
+            const isMe = msg.sender === 'admin';
+            return `
+                 <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                   <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe ? 'bg-charcoal text-cream rounded-br-sm' : 'bg-white border border-sand/50 text-charcoal rounded-bl-sm'}">
+                     ${msg.text}
+                   </div>
+                 </div>
+               `;
+          }).join('');
+          msgContainer.scrollTop = msgContainer.scrollHeight;
+        });
+    };
+
+    // --- Admin: Send Message ---
+    window.sendAdminChatMessage = async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('admin-chat-input');
+      const text = input.value.trim();
+      if (!text || !activeAdminChatUser) return;
+
+      input.value = '';
+      const ts = Date.now();
+
+      await db.collection('chat_sessions').doc(activeAdminChatUser).collection('messages').add({
+        text: text, sender: 'admin', timestamp: ts
+      });
+
+      await db.collection('chat_sessions').doc(activeAdminChatUser).set({
+        lastMessage: text, lastMessageAt: ts, unreadUser: firebase.firestore.FieldValue.increment(1)
+      }, { merge: true });
+    };
+
+    // Click "Contact" from Customer Table redirects here
+    window.contactSpecificCustomer = function (customerId, email) {
+      switchAdminSubTab('customers', 'contact');
+      db.collection('users').doc(customerId).get().then(doc => {
+        if (doc.exists) {
+          window.openAdminChatForUser(customerId, doc.data().name || 'User', email);
+        }
+      });
+    }
+
+    // --- User: Toggle Widget ---
+    window.toggleUserChat = () => {
+      if (!currentUser || currentUser.role === 'admin') {
+        toggleModal('login-modal');
+        return;
+      }
+      const win = document.getElementById('user-chat-window');
+      if (win.classList.contains('hidden')) {
+        win.classList.remove('hidden');
+        setTimeout(() => win.classList.remove('scale-95', 'opacity-0', 'pointer-events-none'), 10);
+
+        db.collection('chat_sessions').doc(currentUser.uid).set({ unreadUser: 0 }, { merge: true });
+        document.getElementById('user-chat-unread-badge').classList.add('hidden');
+      } else {
+        win.classList.add('scale-95', 'opacity-0', 'pointer-events-none');
+        setTimeout(() => win.classList.add('hidden'), 300);
+      }
+    };
+
+    // --- User: Send Message ---
+    window.sendUserChatMessage = async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('user-chat-input');
+      const text = input.value.trim();
+      if (!text || !currentUser) return;
+
+      input.value = '';
+      const ts = Date.now();
+
+      await db.collection('chat_sessions').doc(currentUser.uid).collection('messages').add({
+        text: text, sender: 'user', timestamp: ts
+      });
+
+      await db.collection('chat_sessions').doc(currentUser.uid).set({
+        userName: currentUser.name, userEmail: currentUser.email,
+        lastMessage: text, lastMessageAt: ts, unreadAdmin: firebase.firestore.FieldValue.increment(1)
+      }, { merge: true });
+    };
+
+    // --- Initialize Realtime listeners on Auth ---
+    function attachGlobalChatListeners(user) {
+      if (!user) {
+        if (userChatListener) { userChatListener(); userChatListener = null; }
+        document.getElementById('user-live-chat-container')?.classList.add('hidden');
+        return;
+      }
+
+      if (user.role === 'admin') {
+        document.getElementById('user-live-chat-container')?.classList.add('hidden');
+      } else {
+        const container = document.getElementById('user-live-chat-container');
+        if (container) {
+          container.classList.remove('hidden');
+          container.classList.add('flex');
+        }
+
+        if (userChatListener) userChatListener();
+        const msgContainer = document.getElementById('user-chat-messages');
+
+        userChatListener = db.collection('chat_sessions').doc(user.uid).collection('messages')
+          .orderBy('timestamp', 'asc')
+          .onSnapshot(snapshot => {
+            if (snapshot.docs.length > 0) {
+              msgContainer.innerHTML = snapshot.docs.map(doc => {
+                const msg = doc.data();
+                const isMe = msg.sender === 'user';
+                return `
+                       <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                         <div class="max-w-[85%] rounded-2xl px-4 py-2 text-sm shadow-sm ${isMe ? 'bg-flame text-cream rounded-br-sm' : 'bg-white border border-sand/50 text-charcoal rounded-bl-sm'}">
+                           ${msg.text}
+                         </div>
+                       </div>
+                     `;
+              }).join('');
+              msgContainer.scrollTop = msgContainer.scrollHeight;
+            }
+          });
+
+        // Listen for unread badges on the floating button
+        db.collection('chat_sessions').doc(user.uid).onSnapshot(doc => {
+          if (doc.exists) {
+            const unread = doc.data().unreadUser || 0;
+            const badge = document.getElementById('user-chat-unread-badge');
+            if (unread > 0 && document.getElementById('user-chat-window').classList.contains('hidden')) {
+              badge.innerText = unread;
+              badge.classList.remove('hidden');
+              badge.classList.add('flex');
+            } else {
+              badge.classList.add('hidden');
+              badge.classList.remove('flex');
+            }
+          }
+        });
+      }
     }
 
     // --- ADMIN: Contact Customer Form ---
@@ -6832,8 +7043,14 @@
 
       // Only show if a frame element is selected
       if (!selectedItem || selectedItem.dataset.frameRole !== 'frame' || !config) {
-        if (desktopPanel) desktopPanel.classList.add('hidden');
-        if (mobileControls) mobileControls.classList.add('hidden');
+        if (desktopPanel) {
+          desktopPanel.classList.add('hidden');
+          desktopPanel.classList.remove('md:flex'); // Removes flex override so it hides cleanly
+        }
+        if (mobileControls) {
+          mobileControls.classList.add('hidden');
+          mobileControls.classList.remove('flex');
+        }
         if (frameCustomPanel) frameCustomPanel.classList.add('hidden');
         return;
       }
@@ -9432,6 +9649,8 @@
         currentUser = { uid: user.uid, email: user.email, name: user.displayName || "User", role: role };
         window.currentUser = currentUser;
 
+        if (typeof attachGlobalChatListeners === 'function') attachGlobalChatListeners(currentUser);
+
         if (role === 'admin') {
           document.getElementById('nav-auth-buttons').innerHTML = `
                 <button onclick="toggleMobileMenu()" class="md:hidden p-2 mr-2 text-charcoal hover:text-flame transition"><i data-lucide="menu" class="w-6 h-6"></i></button>
@@ -9480,6 +9699,7 @@
       } else {
         currentUser = null;
         window.currentUser = null;
+        if (typeof attachGlobalChatListeners === 'function') attachGlobalChatListeners(null);
         myProjects = [];
         myGallery = [];
         cartItems = [];
@@ -9920,127 +10140,365 @@
     };
 
     async function generateOrderConfirmationPdf(order) {
-      return new Promise((resolve) => {
-        const { jsPDF } = window.jspdf;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
 
-        // 1. Create a beautiful off-screen invoice container
-        const invoiceDiv = document.createElement('div');
-        invoiceDiv.style.position = 'absolute';
-        invoiceDiv.style.top = '-9999px';
-        invoiceDiv.style.left = '-9999px';
-        invoiceDiv.style.width = '800px';
-        invoiceDiv.style.backgroundColor = '#ffffff';
-        invoiceDiv.style.padding = '50px';
-        invoiceDiv.style.fontFamily = 'Arial, sans-serif';
-        invoiceDiv.style.color = '#2b3d46';
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-        const itemsHtml = (order.orderedProducts || []).map(p => `
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #dae5eb; padding: 12px 0;">
-            <div style="font-weight: bold; font-size: 15px;">${p.title} <span style="color:#4a5c66; font-size:13px; font-weight:normal; margin-left: 8px;">Qty: ${p.qty || 1}</span></div>
-            <div style="font-weight: bold; font-size: 15px;">${window.appCurrency || '$'}${(p.cost || 0).toFixed(2)}</div>
-          </div>
-        `).join('');
+      // 1. Header (Dark Slate Background)
+      pdf.setFillColor(43, 61, 70);
+      pdf.rect(0, 0, pageWidth, 35, 'F');
+      pdf.setFillColor(235, 94, 40);
+      pdf.rect(0, 35, pageWidth, 2, 'F');
 
-        const previewImgUrl = order.previewImageURL || 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400';
+      // Header Text
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(26);
+      pdf.text('FrameCraft', 15, 22);
 
-        invoiceDiv.innerHTML = `
-          <div style="border-bottom: 4px solid #eb5e28; padding-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end;">
-            <div>
-              <h1 style="font-size: 38px; font-weight: 900; margin: 0; color: #2b3d46; text-transform: uppercase; letter-spacing: 1px;">FrameCraft</h1>
-              <p style="margin: 5px 0 0 0; color: #4a5c66; font-size: 14px; font-weight: bold;">Bespoke Artisan Framing Studio</p>
-            </div>
-            <div style="text-align: right;">
-              <h2 style="font-size: 28px; font-weight: 900; margin: 0; color: #eb5e28; text-transform: uppercase;">Invoice</h2>
-              <p style="margin: 5px 0 0 0; color: #4a5c66; font-size: 16px; font-weight:bold;">#${order.id}</p>
-            </div>
-          </div>
-          
-          <div style="display: flex; justify-content: space-between; margin-top: 40px; gap: 30px;">
-            <div style="flex: 1; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #dae5eb;">
-              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-top:0; margin-bottom: 12px; letter-spacing: 1.5px; font-weight: bold;">Bill To</h3>
-              <p style="margin: 0 0 5px 0; font-weight: 900; font-size:18px; color: #2b3d46;">${order.customer}</p>
-              <p style="margin: 0 0 5px 0; font-size:14px; color:#4a5c66;">${order.email}</p>
-              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;">${order.phone}</p>
-              <p style="margin: 0 0 0 0; font-size:14px; color:#4a5c66; line-height:1.5;">${order.address}</p>
-            </div>
-            <div style="flex: 1; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #dae5eb;">
-              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-top:0; margin-bottom: 12px; letter-spacing: 1.5px; font-weight: bold;">Order Details</h3>
-              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Order Date:</strong> ${order.date}</p>
-              <p style="margin: 0 0 10px 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Payment Method:</strong> ${order.paymentMethod} (${order.paymentStatus})</p>
-              <p style="margin: 0 0 0 0; font-size:14px; color:#4a5c66;"><strong style="color:#2b3d46;">Est. Delivery:</strong> ${order.estimatedDelivery}</p>
-            </div>
-          </div>
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(20);
+      pdf.setTextColor(235, 94, 40);
+      pdf.text('INVOICE', pageWidth - 15, 20, { align: 'right' });
 
-          <div style="margin-top: 40px;">
-            <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-bottom: 15px; letter-spacing: 1.5px; font-weight: bold;">Itemized Summary</h3>
-            ${itemsHtml}
-          </div>
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`Order #${order.id}`, pageWidth - 15, 28, { align: 'right' });
 
-          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <div style="flex: 1; margin-right: 40px;">
-              <h3 style="font-size: 12px; text-transform: uppercase; color: #9eb6c4; margin-bottom: 15px; letter-spacing: 1.5px; font-weight: bold;">Product Preview</h3>
-              <div style="background: #eef3f6; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #dae5eb;">
-                 <img src="${previewImgUrl}" crossorigin="anonymous" style="max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              </div>
-            </div>
-            
-            <div style="width: 320px;">
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; color:#4a5c66;">
-                <span>Subtotal:</span> <span>${window.appCurrency || '$'}${(order.baseAmount || 0).toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; color:#4a5c66;">
-                <span>Shipping:</span> <span>${window.appCurrency || '$'}${(order.shippingCharges || 0).toFixed(2)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 15px 0; font-size: 22px; font-weight: 900; border-top: 2px solid #2b3d46; margin-top: 10px; color: #eb5e28;">
-                <span>Grand Total:</span> <span>${order.total}</span>
-              </div>
-            </div>
-          </div>
+      // 2. Customer & Order Details (Two Columns)
+      pdf.setTextColor(43, 61, 70);
 
-          <div style="margin-top: 60px; text-align: center; color: #9eb6c4; font-size: 13px; border-top: 1px solid #dae5eb; padding-top: 25px; line-height: 1.6;">
-            <p style="margin:0; font-weight:bold; color: #4a5c66;">Thank you for shopping with FrameCraft Studio!</p>
-            <p style="margin:5px 0 0 0;">If you have any questions concerning this invoice, please contact us at <strong>hello@framecraft.studio</strong></p>
-          </div>
-        `;
+      // Left Column (Bill To)
+      let y = 50;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(158, 182, 196);
+      pdf.text('BILL TO', 15, y);
 
-        document.body.appendChild(invoiceDiv);
+      y += 6;
+      pdf.setTextColor(43, 61, 70);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.text(order.customer || 'Guest User', 15, y);
 
-        const imgElement = invoiceDiv.querySelector('img');
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(order.email || '', 15, y);
+      y += 5;
+      pdf.text(order.phone || '', 15, y);
 
-        const finalizePdf = async () => {
-          try {
-            await new Promise(r => setTimeout(r, 100)); // Allow DOM layout to settle
-            const canvas = await html2canvas(invoiceDiv, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const splitAddress = pdf.splitTextToSize(order.address || '', 80);
+      y += 5;
+      pdf.text(splitAddress, 15, y);
 
-            pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            document.body.removeChild(invoiceDiv);
+      // Right Column (Order Info)
+      let ry = 50;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(158, 182, 196);
+      pdf.text('ORDER DETAILS', 120, ry);
 
-            resolve({
-              blob: pdf.output('blob'),
-              dataUri: pdf.output('datauristring')
-            });
-          } catch (e) {
-            console.error("PDF Generation error:", e);
-            document.body.removeChild(invoiceDiv);
-            resolve(null);
-          }
-        };
+      ry += 6;
+      pdf.setTextColor(43, 61, 70);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Date:', 120, ry);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(order.date || '', 150, ry);
 
-        if (imgElement) {
-          if (imgElement.complete && imgElement.naturalHeight !== 0) {
-            finalizePdf();
-          } else {
-            imgElement.onload = finalizePdf;
-            imgElement.onerror = finalizePdf;
-            setTimeout(finalizePdf, 3000); // safety fallback
-          }
-        } else {
-          finalizePdf();
-        }
+      ry += 6;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Method:', 120, ry);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${order.paymentMethod} (${order.paymentStatus})`, 150, ry);
+
+      ry += 6;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Est. Delivery:', 120, ry);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(order.estimatedDelivery || '', 150, ry);
+
+      // 3. Line Separator
+      y = Math.max(y + (splitAddress.length * 5), ry) + 15;
+      pdf.setDrawColor(218, 229, 235);
+      pdf.line(15, y, pageWidth - 15, y);
+
+      // 4. Products Table Header
+      y += 8;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(158, 182, 196);
+      pdf.text('ITEM DESCRIPTION', 15, y);
+      pdf.text('QTY', 140, y, { align: 'center' });
+      pdf.text('TOTAL', pageWidth - 15, y, { align: 'right' });
+
+      y += 4;
+      pdf.line(15, y, pageWidth - 15, y);
+
+      // 5. Products List
+      y += 8;
+      pdf.setTextColor(43, 61, 70);
+      pdf.setFontSize(11);
+      (order.orderedProducts || []).forEach(p => {
+        pdf.setFont('helvetica', 'bold');
+        const splitTitle = pdf.splitTextToSize(p.title, 110);
+        pdf.text(splitTitle, 15, y);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(String(p.qty || 1), 140, y, { align: 'center' });
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(`${window.appCurrency || '$'}${(p.cost || 0).toFixed(2)}`, pageWidth - 15, y, { align: 'right' });
+
+        y += (splitTitle.length * 6) + 4;
       });
+
+      pdf.line(15, y, pageWidth - 15, y);
+
+      // 6. Totals & Product Image
+      y += 10;
+
+      // Fetch and embed the image
+      const previewUrl = order.previewImageURL;
+      if (previewUrl && !previewUrl.includes('via.placeholder.com')) {
+        try {
+          const base64Img = await new Promise((res, rej) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+              const c = document.createElement('canvas');
+              // DOWNSCALE heavily to keep PDF under EmailJS 50KB Free Tier limit
+              const maxW = 200;
+              const scale = Math.min(1, maxW / img.width);
+              c.width = img.width * scale;
+              c.height = img.height * scale;
+              const cx = c.getContext('2d');
+              cx.drawImage(img, 0, 0, c.width, c.height);
+              res(c.toDataURL('image/jpeg', 0.4)); // 40% quality compression
+            };
+            img.onerror = rej;
+            img.src = previewUrl;
+          });
+          pdf.addImage(base64Img, 'JPEG', 15, y, 70, 70);
+        } catch (e) { console.warn("Could not embed image in PDF:", e); }
+      }
+
+      // Totals on the right
+      let ty = y + 5;
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Subtotal:', 140, ty);
+      pdf.text(`${window.appCurrency || '$'}${(order.baseAmount || 0).toFixed(2)}`, pageWidth - 15, ty, { align: 'right' });
+
+      ty += 8;
+      pdf.text('Shipping:', 140, ty);
+      pdf.text(`${window.appCurrency || '$'}${(order.shippingCharges || 0).toFixed(2)}`, pageWidth - 15, ty, { align: 'right' });
+
+      ty += 12;
+      pdf.setFillColor(43, 61, 70);
+      pdf.rect(130, ty - 7, 70, 12, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('GRAND TOTAL:', 135, ty);
+      pdf.setTextColor(235, 94, 40); // Flame
+      pdf.text(String(order.total), pageWidth - 17, ty, { align: 'right' });
+
+      // Footer
+      pdf.setTextColor(158, 182, 196);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text('Thank you for shopping with FrameCraft Studio!', pageWidth / 2, pageHeight - 20, { align: 'center' });
+      pdf.text('hello@framecraft.studio', pageWidth / 2, pageHeight - 14, { align: 'center' });
+
+      // Clean Data URI for EmailJS attachment compatibility
+      let cleanDataUri = pdf.output('datauristring');
+      cleanDataUri = cleanDataUri.replace(/filename=[^;]+;/, '');
+
+      return {
+        blob: pdf.output('blob'),
+        dataUri: cleanDataUri
+      };
+    }
+
+    window.downloadLastOrderPdf = () => {
+      if (!window.lastOrderPdf?.blob) return showToast('Your order PDF is not available yet.');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(window.lastOrderPdf.blob);
+      link.download = window.lastOrderPdf.filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    };
+
+    async function processFinalCheckoutOrderCreation(method, paymentStatus, meta) {
+      const name = document.getElementById('chk-name').value || "Guest User";
+      const email = document.getElementById('chk-email').value || "processing@studio.com";
+      const phone = document.getElementById('chk-phone').value || "N/A";
+      const province = document.getElementById('chk-province').value || "";
+      const city = document.getElementById('chk-city').value || "";
+      const street = document.getElementById('chk-address').value || "";
+      const address = `${street}, ${city}, ${province}`;
+      const title = document.getElementById('editor-project-title').innerText;
+
+      const basePriceRaw = parseFloat(document.getElementById('chk-total').innerText.replace(/[^0-9.]/g, '')) || 0;
+      const shippingRateValue = method === 'CARD' ? (basePriceRaw > 150 ? 0 : 15.00) : 0;
+      const structuralGrandTotal = basePriceRaw + shippingRateValue;
+
+      const orderId = 'ORD-' + Math.floor(10000 + Math.random() * 90000);
+      const estDeliveryTimestampString = new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      // Automatically capture the user's live editor workspace if they are purchasing from the builder
+      let activePreviewUrl = 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400';
+      if (window.isDirectBuyCheckout) {
+        try {
+          const editorCanvas = document.getElementById('design-canvas');
+          const canvasShot = await html2canvas(editorCanvas, { scale: 1, useCORS: true });
+          activePreviewUrl = canvasShot.toDataURL('image/jpeg', 0.8);
+        } catch (e) { }
+      } else if (cartItems.length > 0) {
+        activePreviewUrl = cartItems[0].imageURL || activePreviewUrl;
+      }
+
+      const structuredDatabaseOrderRecordPayload = {
+        id: orderId,
+        uid: currentUser ? currentUser.uid : 'GUEST-AUTHENTICATION-CONTEXT',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'Pending',
+        customer: name,
+        email: email,
+        phone: phone,
+        address: address,
+        previewImageURL: activePreviewUrl,
+
+        orderedProducts: cartItems.length > 0 ? cartItems.map(i => ({ title: i.title, cost: parseFloat(i.cost) || 0, qty: 1 })) : [{ title: title, cost: basePriceRaw, qty: 1 }],
+        baseAmount: basePriceRaw,
+        shippingCharges: shippingRateValue,
+        total: `${window.appCurrency || '$'}${structuralGrandTotal.toFixed(2)}`,
+
+        paymentMethod: method,
+        paymentStatus: paymentStatus,
+        paymentProvider: method === 'CARD' ? 'StripeEngineAbstractionAdapter' : 'None',
+        paymentIntentId: meta.intentId,
+        transactionId: meta.transactionId,
+        cardBrand: meta.brand,
+        cardLast4: meta.last4,
+        paidAt: method === 'CARD' ? firebase.firestore.FieldValue.serverTimestamp() : null,
+        estimatedDelivery: estDeliveryTimestampString
+      };
+
+      const orderPdf = await generateOrderConfirmationPdf(structuredDatabaseOrderRecordPayload);
+      structuredDatabaseOrderRecordPayload.pdfFileName = `FrameCraft-Invoice-${orderId}.pdf`;
+
+      await db.collection('orders').doc(orderId).set(structuredDatabaseOrderRecordPayload);
+
+      // Create a gorgeous visual HTML email including the product image
+      let emailTemplateAggregationOutputBlock = `
+        <div style="font-family: Arial, sans-serif; color: #2b3d46; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #dae5eb; border-radius: 12px; overflow: hidden;">
+            <div style="background: #2b3d46; padding: 20px; text-align: center; border-bottom: 3px solid #eb5e28;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">FrameCraft Studio</h2>
+            </div>
+            <div style="padding: 30px;">
+                <h3 style="margin-top: 0; color: #2b3d46;">Order Confirmation - #${orderId}</h3>
+                <p style="color: #4a5c66; font-size: 15px;">Thank you for choosing FrameCraft! Your bespoke order has been validated successfully.</p>
+                
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #dae5eb;">
+                    <p style="margin: 0 0 10px 0;"><b>Delivery To:</b> ${name}</p>
+                    <p style="margin: 0 0 10px 0;"><b>Address:</b> ${address}</p>
+                    <p style="margin: 0 0 0 0;"><b>Est. Arrival:</b> ${estDeliveryTimestampString}</p>
+                </div>
+
+                <h4 style="margin-bottom: 10px; color: #2b3d46;">Order Summary</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    ${structuredDatabaseOrderRecordPayload.orderedProducts.map(p => `
+                    <tr>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #dae5eb; color: #4a5c66;">${p.title} (x${p.qty})</td>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #dae5eb; text-align: right; font-weight: bold; color: #2b3d46;">${window.appCurrency || '$'}${p.cost.toFixed(2)}</td>
+                    </tr>
+                    `).join('')}
+                </table>
+                
+                <div style="text-align: right; margin-bottom: 30px; font-size: 15px; color: #4a5c66;">
+                    <p style="margin: 5px 0;">Subtotal: ${window.appCurrency || '$'}${basePriceRaw.toFixed(2)}</p>
+                    <p style="margin: 5px 0;">Shipping: ${window.appCurrency || '$'}${shippingRateValue.toFixed(2)}</p>
+                    <h3 style="color: #eb5e28; margin: 10px 0 0 0; font-size: 20px;">Grand Total: ${window.appCurrency || '$'}${structuralGrandTotal.toFixed(2)}</h3>
+                </div>
+
+                ${activePreviewUrl ? `
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                    <p style="margin-top: 0; font-weight: bold; color: #9eb6c4; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Product Preview</p>
+                    <img src="${activePreviewUrl}" style="max-width: 100%; max-height: 250px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Product Preview">
+                </div>
+                ` : ''}
+            </div>
+        </div>
+      `;
+
+      try {
+        await emailjs.send('service_ia6xjfs', 'template_72upsy8', {
+          customer_email: email,
+          to_name: name,
+          title: `Order Validation Summary Confirmation - #${orderId}`,
+          message: emailTemplateAggregationOutputBlock,
+          pdf_filename: structuredDatabaseOrderRecordPayload.pdfFileName,
+          pdf_attachment: orderPdf ? orderPdf.dataUri : ''
+        });
+
+        await emailjs.send('service_ia6xjfs', 'template_72upsy8', {
+          customer_email: 'admin@framecraft.com',
+          to_name: 'Studio Management Admin',
+          title: `ALERT: New Order Received - #${orderId}`,
+          message: emailTemplateAggregationOutputBlock,
+          pdf_filename: structuredDatabaseOrderRecordPayload.pdfFileName,
+          pdf_attachment: orderPdf ? orderPdf.dataUri : ''
+        });
+      } catch (e) { console.warn("Outbound SMTP relay dropped payload packet.", e); }
+
+      const batch = db.batch();
+      if (currentUser) {
+        const cartDocs = await db.collection('users').doc(currentUser.uid).collection('cart').get();
+        cartDocs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+
+      cartItems = [];
+      if (orderPdf) {
+        window.lastOrderPdf = { blob: orderPdf.blob, filename: structuredDatabaseOrderRecordPayload.pdfFileName };
+      }
+      updateCartUI();
+      window.hideGlobalLoader();
+
+      const screen = document.getElementById('secure-payment-screen');
+      if (screen && !screen.classList.contains('hidden')) closeSecurePaymentScreen();
+
+      document.getElementById('checkout-view').innerHTML = `
+            <div class="max-w-2xl mx-auto text-center py-16 bg-white rounded-3xl shadow-xl border border-sand p-10 mt-10">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i data-lucide="check-circle" class="w-12 h-12 text-green-600"></i>
+                </div>
+                <h2 class="text-3xl font-black text-charcoal mb-4">Order Validated & Confirmed</h2>
+                <p class="text-sm font-semibold text-slate mb-6">Bespoke Reference Code: <span class="font-bold text-flame">${orderId}</span></p>
+                
+                <div class="bg-editorbg rounded-2xl p-6 text-left text-xs font-bold text-slate space-y-3 mb-8 max-w-md mx-auto border border-sand/40">
+                    <div class="flex justify-between"><span>Customer Name:</span><span class="text-charcoal">${name}</span></div>
+                    <div class="flex justify-between"><span>Delivery Destination:</span><span class="text-charcoal text-right max-w-[60%] truncate">${address}</span></div>
+                    <div class="flex justify-between"><span>Handcrafted Estimated Arrival:</span><span class="text-charcoal">${estDeliveryTimestampString}</span></div>
+                    <hr style="border:none; border-top:1px solid #ccc5b9; opacity:0.4;">
+                    <div class="flex justify-between"><span>Payment Method Selected:</span><span class="text-charcoal">${method}</span></div>
+                    <div class="flex justify-between"><span>Downstream Processing Status:</span><span class="text-green-600">${paymentStatus}</span></div>
+                    <div class="flex justify-between"><span>Gateway Network ID:</span><span class="text-charcoal font-mono truncate max-w-[50%]">${meta.transactionId}</span></div>
+                    <hr style="border:none; border-top:1px solid #ccc5b9; opacity:0.4;">
+                    <div class="flex justify-between text-sm font-black"><span>Total Volume Authorized:</span><span class="text-flame">${window.appCurrency || '$'}${structuralGrandTotal.toFixed(2)}</span></div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-3"><button onclick="downloadLastOrderPdf()" class="bg-charcoal px-6 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg"><i data-lucide="file-down" class="w-4 h-4 inline mr-1"></i> Download Order PDF</button><button onclick="window.location.reload()" class="btn-solid-orange px-8 py-3.5 rounded-xl text-cream font-extrabold text-sm shadow-lg">Return to Studio Workspace</button></div>
+            </div>
+        `;
+      lucide.createIcons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     window.downloadLastOrderPdf = () => {
@@ -11720,80 +12178,7 @@
       artLayer.appendChild(wrap); selectElement(wrap, 'image'); recordState();
     };
 
-    function getRealTarget(clientX, clientY) {
-      const elements = document.elementsFromPoint(clientX, clientY);
-      for (let el of elements) {
-        const item = el.closest('.canvas-item');
-        if (!item) continue;
-
-        // Text, masks, and SVGs are always selectable
-        if (item.dataset.type === 'text' || item.dataset.mask === 'true' || item.querySelector('svg')) {
-          return item;
-        }
-
-        // For images, check if the specific pixel clicked is transparent
-        const img = item.querySelector('img');
-        if (img) {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1; canvas.height = 1;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            const rect = img.getBoundingClientRect();
-
-            // Map click coordinates to natural image scale
-            const rx = (clientX - rect.left) * (img.naturalWidth / rect.width);
-            const ry = (clientY - rect.top) * (img.naturalHeight / rect.height);
-
-            ctx.drawImage(img, rx, ry, 1, 1, 0, 0, 1, 1);
-            const alpha = ctx.getImageData(0, 0, 1, 1).data[3];
-
-            // If pixel is not transparent, select this frame!
-            if (alpha > 10) return item;
-          } catch (e) {
-            return item; // Fallback if image fails to read
-          }
-        } else {
-          return item;
-        }
-      }
-      return null;
-    }
-
-    mainWorkspace.addEventListener('pointerdown', e => {
-      if (e.target.closest('.portal-handle')) return;
-
-      if (isCropping) {
-        const item = e.target.closest('.canvas-item');
-        if (item === activeCropMask) {
-          isDraggingCrop = true;
-          const img = activeCropMask.querySelector('img');
-          const pos = window.getComputedStyle(img).objectPosition.split(' ');
-          cropStartPos = { px: parseFloat(pos[0]) || 50, py: parseFloat(pos[1]) || 50, mx: e.clientX, my: e.clientY };
-          e.preventDefault();
-          activeCropMask.setPointerCapture(e.pointerId);
-          return;
-        } else {
-          exitCropMode();
-        }
-      }
-
-      // Run our smart pixel checker
-      const item = getRealTarget(e.clientX, e.clientY);
-
-      if (item) {
-        if (item.dataset.type === 'text' && item.contentEditable === "true") return;
-
-        e.preventDefault();
-        item.setPointerCapture(e.pointerId);
-        selectElement(item, item.dataset.type);
-        isDragging = true;
-        activeItem = item;
-        startMetrics = { x: e.clientX - item.offsetLeft, y: e.clientY - item.offsetTop };
-        return;
-      }
-
-      deselectAll();
-    });
+    // Duplicate pointerdown and getRealTarget functions removed here to fix dragging offset bugs
 
     window.addFrameToCanvas = (src, cost = 0, name = "Item") => {
       const canvasW = mainWorkspace.offsetWidth;
@@ -13641,6 +14026,42 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- Floating Chat Widget -->
+  <div id="user-live-chat-container" class="fixed bottom-6 right-6 z-[9000] hidden flex-col items-end">
+    <!-- Chat Window -->
+    <div id="user-chat-window"
+      class="bg-white border border-sand shadow-2xl rounded-2xl w-[320px] h-[450px] mb-4 flex flex-col overflow-hidden transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right pointer-events-none hidden">
+      <div class="bg-charcoal text-cream p-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i data-lucide="headphones" class="w-5 h-5 text-flame"></i>
+          <span class="font-bold text-sm">Studio Support</span>
+        </div>
+        <button onclick="window.toggleUserChat()" class="text-slate hover:text-cream transition"><i data-lucide="x"
+            class="w-4 h-4"></i></button>
+      </div>
+      <div id="user-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-cream/20">
+        <div class="text-center text-xs font-bold text-slate py-4">Start a conversation with us!</div>
+      </div>
+      <div class="p-3 border-t border-sand/50 bg-white">
+        <form onsubmit="window.sendUserChatMessage(event)" class="flex gap-2">
+          <input type="text" id="user-chat-input"
+            class="flex-1 px-3 py-2 bg-editorbg border border-sand rounded-lg text-sm focus:outline-none focus:border-flame"
+            placeholder="Type a message..." autocomplete="off">
+          <button type="submit" class="bg-flame text-cream px-3 py-2 rounded-lg hover:bg-charcoal transition"><i
+              data-lucide="send" class="w-4 h-4"></i></button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Floating Button -->
+    <button onclick="window.toggleUserChat()"
+      class="w-14 h-14 bg-flame hover:bg-charcoal text-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 relative">
+      <i data-lucide="message-circle" class="w-6 h-6"></i>
+      <span id="user-chat-unread-badge"
+        class="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] font-black w-5 h-5 rounded-full items-center justify-center hidden border-2 border-white">0</span>
+    </button>
   </div>
 
   <!-- CMS Unsaved Changes Alert Bar -->
