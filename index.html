@@ -7993,6 +7993,10 @@
         metaDescEl.setAttribute('content', page.metaDescription);
       }
 
+      // Hide the blog index screen so the article is visible!
+      const blogSec = document.getElementById('blog-index-section');
+      if (blogSec) blogSec.classList.add('hidden');
+
       const dynSection = document.getElementById('dynamic-page-section');
       if (dynSection) dynSection.classList.remove('hidden');
 
@@ -9192,6 +9196,7 @@
         renderVisualBreadcrumbs([{ name: 'Home', url: '/' }, { name: 'About Us', url: '/about-us' }]);
       }
       else if (cleanPath === "/blogs") {
+        window.switchView('landing', false);
         window.showBlogIndexPage(false);
 
         window.updateSEOMetadata({
@@ -9426,6 +9431,7 @@
         }
       }
       else if (cmsPage) {
+        window.switchView('landing', false);
         window.showLandingContentSections(false);
         window.renderPageContent(cmsPage);
 
