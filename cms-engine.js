@@ -453,7 +453,7 @@
               copyright: {
                 type: "text",
                 label: "Footer Copyright Text",
-                value: "© 2024 FrameCraft. All rights reserved. | Designed with ❤️ by FrameCraft Team",
+                value: "© 2024 FrameCraft. All rights reserved. | Designed by <a href='https://grouperlogic.com/' target='_blank' style='text-decoration:underline;'>grouperlogic.com</a>",
                 style: {}
               },
               quick_links_items: {
