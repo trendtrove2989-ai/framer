@@ -1578,51 +1578,7 @@
     </section>
   </div>
 
-  <!-- Product Detail Modal -->
-  <div id="product-detail-modal"
-    class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-charcoal/60 backdrop-blur-md transition-opacity p-4">
-    <div
-      class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl border border-sand overflow-hidden max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center p-6 border-b border-sand/40">
-        <h3 class="text-2xl font-extrabold text-charcoal tracking-tight" id="product-detail-title">Product Details</h3>
-        <button onclick="toggleModal('product-detail-modal')" class="text-slate hover:text-flame transition"><i
-            data-lucide="x" class="w-6 h-6"></i></button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
-        <div class="bg-editorbg p-6">
-          <div id="product-detail-image-container"
-            class="aspect-square rounded-xl overflow-hidden bg-white shadow-inner p-4 relative">
-            <img id="product-detail-main-image" src="" alt="" class="w-full h-full object-contain">
-          </div>
-          <div id="product-detail-thumbnails" class="grid grid-cols-4 gap-3 mt-4">
-            <!-- Thumbnails will be added here -->
-          </div>
-        </div>
-        <div class="p-6 flex flex-col">
-          <h2 id="product-detail-name" class="text-3xl font-black text-charcoal mb-2"></h2>
-          <p id="product-detail-price" class="text-4xl font-black text-flame mb-6"></p>
-          <div class="mb-6">
-            <h4 class="text-sm font-bold text-slate uppercase tracking-widest mb-2">Description</h4>
-            <p id="product-detail-description" class="text-slate">Premium quality custom frame, perfect for your
-              cherished memories. Crafted with the finest materials for durability and elegance.</p>
-          </div>
-          <div class="flex gap-3 mt-auto">
-            <button id="product-detail-cart-btn"
-              class="flex-1 btn-solid-orange py-3.5 rounded-xl text-cream font-extrabold text-lg shadow-lg flex items-center justify-center gap-2">
-              <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-              Add to Cart
 
-            </button>
-            <button id="product-detail-customize-btn" onclick="triggerTransition('dashboard')"
-              class="flex-1 bg-charcoal text-cream py-3.5 rounded-xl font-extrabold text-lg shadow-lg hover:bg-flame transition flex items-center justify-center gap-2">
-              <i data-lucide="paintbrush" class="w-5 h-5"></i>
-              Customize
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Order Details Modal -->
   <div id="order-details-modal"
@@ -1726,7 +1682,8 @@
       <!-- Header -->
       <div class="px-8 py-7 border-b border-gray-200/60 flex justify-between items-center bg-[#f9f8f6] shrink-0">
         <h3 class="font-serif text-3xl font-medium text-gray-900 tracking-tight">Your Cart</h3>
-        <button onclick="toggleModal('cart-modal')" class="text-gray-900 hover:opacity-70 transition p-1 cursor-pointer" aria-label="Close Cart">
+        <button onclick="toggleModal('cart-modal')" class="text-gray-900 hover:opacity-70 transition p-1 cursor-pointer"
+          aria-label="Close Cart">
           <i data-lucide="x" class="w-6 h-6 stroke-[1.8]"></i>
         </button>
       </div>
@@ -3426,7 +3383,7 @@
                 <span class="material-symbols-outlined text-[18px]">shopping_cart</span> Add To Cart
               </button>
               <a href="/products/classic-wood"
-                onclick="event.preventDefault(); window.handlePathRouting('/products/classic-wood')"
+                onclick="event.preventDefault(); window.openProductDetail('classic-wood')"
                 class="w-full py-3 border border-outline text-primary text-label-sm font-label-sm hover:bg-surface-container-low transition-all text-center flex items-center justify-center !rounded !bg-transparent font-bold">View
                 Details</a>
             </div>
@@ -3459,7 +3416,7 @@
                 <span class="material-symbols-outlined text-[18px]">shopping_cart</span> Add To Cart
               </button>
               <a href="/products/modern-metal"
-                onclick="event.preventDefault(); window.handlePathRouting('/products/modern-metal')"
+                onclick="event.preventDefault(); window.openProductDetail('modern-metal')"
                 class="w-full py-3 border border-outline text-primary text-label-sm font-label-sm hover:bg-surface-container-low transition-all text-center flex items-center justify-center !rounded !bg-transparent font-bold">View
                 Details</a>
             </div>
@@ -3492,7 +3449,7 @@
                 <span class="material-symbols-outlined text-[18px]">shopping_cart</span> Add To Cart
               </button>
               <a href="/products/gallery-wrap"
-                onclick="event.preventDefault(); window.handlePathRouting('/products/gallery-wrap')"
+                onclick="event.preventDefault(); window.openProductDetail('gallery-wrap')"
                 class="w-full py-3 border border-outline text-primary text-label-sm font-label-sm hover:bg-surface-container-low transition-all text-center flex items-center justify-center !rounded !bg-transparent font-bold">View
                 Details</a>
             </div>
@@ -3523,8 +3480,7 @@
                 onclick="addStoreItemToCart('ORNATE GOLD', 85.00)">
                 <span class="material-symbols-outlined text-[18px]">shopping_cart</span> Add To Cart
               </button>
-              <a href="/products/ornate-gold"
-                onclick="event.preventDefault(); window.handlePathRouting('/products/ornate-gold')"
+              <a href="/products/ornate-gold" onclick="event.preventDefault(); window.openProductDetail('ornate-gold')"
                 class="w-full py-3 border border-outline text-primary text-label-sm font-label-sm hover:bg-surface-container-low transition-all text-center flex items-center justify-center !rounded !bg-transparent font-bold">View
                 Details</a>
             </div>
@@ -3534,7 +3490,7 @@
     </section>
 
     <!-- Category Section: Shop by Category -->
-    <section class="py-24 bg-surface-container relative overflow-hidden">
+    <section id="category-section" class="py-24 bg-surface-container relative overflow-hidden">
       <div class="px-4 md:px-margin-desktop max-w-container-max mx-auto mb-12 flex justify-between items-end">
         <div>
           <h2 class="text-headline-lg font-headline-lg text-primary">Shop by Category</h2>
@@ -4224,6 +4180,284 @@
             </form>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DEDICATED PRODUCT DETAIL SECTION ================= -->
+    <section id="product-detail-view" class="hidden py-10 bg-white min-h-[80vh]">
+      <div class="max-w-[1280px] mx-auto px-4 md:px-8">
+        <!-- Breadcrumb Bar -->
+        <nav class="flex items-center gap-2 text-xs text-gray-500 mb-8 font-sans">
+          <a href="/" onclick="event.preventDefault(); window.handlePathRouting('/')"
+            class="hover:text-black transition">Home</a>
+          <span>&rsaquo;</span>
+          <a href="/products"
+            onclick="event.preventDefault(); window.handlePathRouting('/products'); window.scrollToSection('frames-section');"
+            class="hover:text-black transition">Products</a>
+          <span>&rsaquo;</span>
+          <span id="pd-breadcrumb-title" class="font-bold text-gray-900">Ornate Victorian Gilt</span>
+        </nav>
+
+        <!-- Main 2-Column Product Detail Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20 items-start">
+          <!-- Left Column: Gallery Images (7 cols) -->
+          <div class="lg:col-span-7 flex flex-col">
+            <!-- Main Product Image Container -->
+            <div
+              class="relative w-full aspect-[4/3] sm:aspect-square bg-[#f4f3f0] overflow-hidden border border-gray-200/60 mb-4">
+              <!-- Bestseller Badge -->
+              <span
+                class="absolute top-4 left-4 bg-black text-white text-[10px] font-bold tracking-widest px-3 py-1 uppercase z-10">
+                BESTSELLER
+              </span>
+              <img id="pd-main-image" src="" alt="Product Image"
+                class="w-full h-full object-cover transition-opacity duration-300">
+            </div>
+
+            <!-- Thumbnail Selector Grid -->
+            <div id="pd-thumbnails-grid" class="grid grid-cols-4 gap-4">
+              <!-- Dynamic thumbnails inserted here -->
+            </div>
+          </div>
+
+          <!-- Right Column: Product Buy Box & Specifications (5 cols) -->
+          <div class="lg:col-span-5 flex flex-col">
+            <!-- Title -->
+            <h1 id="pd-product-name"
+              class="font-serif text-3xl sm:text-4xl font-medium text-gray-900 leading-tight mb-3">
+              Ornate Victorian Gilt
+            </h1>
+
+            <!-- Rating Stars & Reviews -->
+            <div class="flex items-center gap-2 mb-4 text-sm">
+              <div class="flex text-amber-500 text-base">★★★★★</div>
+              <span class="text-xs font-semibold text-gray-600">4.8 (94 reviews)</span>
+            </div>
+
+            <!-- Price & Discount -->
+            <div class="flex items-center gap-3 mb-6">
+              <span id="pd-price" class="text-2xl sm:text-3xl font-bold text-gray-900">$195.00</span>
+              <span id="pd-original-price" class="text-lg text-gray-400 line-through">$250.00</span>
+              <span id="pd-discount-badge"
+                class="bg-[#fef3c7] text-[#d97706] text-[11px] font-bold px-2.5 py-1 uppercase tracking-wider">
+                22% OFF
+              </span>
+            </div>
+
+            <!-- Description -->
+            <p id="pd-description" class="text-sm text-gray-600 leading-relaxed mb-8">
+              Hand-gilded gold finish with intricate period detailing. This museum-quality frame is crafted from solid
+              wood and finished with authentic gold leaf, perfect for traditional oil paintings and heritage portraits.
+            </p>
+
+            <!-- Select Size Options -->
+            <div class="mb-6">
+              <label class="block text-[11px] font-bold text-gray-900 uppercase tracking-wider mb-2.5">
+                SELECT SIZE
+              </label>
+              <div class="grid grid-cols-3 gap-3" id="pd-size-selector">
+                <button type="button" onclick="window.selectPdSize('small', this)"
+                  class="pd-size-btn bg-black text-white py-3 px-2 text-xs font-bold border border-black text-center transition cursor-pointer">
+                  Small (8x10)
+                </button>
+                <button type="button" onclick="window.selectPdSize('medium', this)"
+                  class="pd-size-btn bg-white text-gray-800 hover:border-black py-3 px-2 text-xs font-bold border border-gray-300 text-center transition cursor-pointer">
+                  Medium (16x20)
+                </button>
+                <button type="button" onclick="window.selectPdSize('large', this)"
+                  class="pd-size-btn bg-white text-gray-800 hover:border-black py-3 px-2 text-xs font-bold border border-gray-300 text-center transition cursor-pointer">
+                  Large (24x36)
+                </button>
+              </div>
+            </div>
+
+            <!-- Material Finish Swatches -->
+            <div class="mb-8">
+              <label class="block text-[11px] font-bold text-gray-900 uppercase tracking-wider mb-2.5">
+                MATERIAL FINISH
+              </label>
+              <div class="flex items-center gap-6" id="pd-material-selector">
+                <button type="button" onclick="window.selectPdMaterial('GILT GOLD', this)"
+                  class="pd-mat-btn flex flex-col items-center gap-1.5 group cursor-pointer">
+                  <span
+                    class="w-8 h-8 rounded-full bg-[#d4af37] border-2 border-black group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[9px] font-bold text-gray-900 tracking-wider">GILT GOLD</span>
+                </button>
+                <button type="button" onclick="window.selectPdMaterial('ANTIQUE SILVER', this)"
+                  class="pd-mat-btn flex flex-col items-center gap-1.5 group cursor-pointer">
+                  <span
+                    class="w-8 h-8 rounded-full bg-[#e0e0e0] border-2 border-transparent group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[9px] font-bold text-gray-500 tracking-wider">ANTIQUE SILVER</span>
+                </button>
+                <button type="button" onclick="window.selectPdMaterial('WALNUT WOOD', this)"
+                  class="pd-mat-btn flex flex-col items-center gap-1.5 group cursor-pointer">
+                  <span
+                    class="w-8 h-8 rounded-full bg-[#5c4033] border-2 border-transparent group-hover:scale-110 transition-transform"></span>
+                  <span class="text-[9px] font-bold text-gray-500 tracking-wider">WALNUT WOOD</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3 mb-8">
+              <button id="pd-add-to-cart-btn"
+                class="w-full bg-black hover:bg-gray-900 text-white py-4 font-bold text-xs uppercase tracking-widest transition rounded-none cursor-pointer">
+                ADD TO CART
+              </button>
+              <button id="pd-customize-btn"
+                class="w-full bg-white border-2 border-[#855D28] text-[#855D28] hover:bg-[#855D28] hover:text-white py-3.5 font-bold text-xs uppercase tracking-widest transition rounded-none cursor-pointer">
+                CUSTOMIZE YOUR SELECTION
+              </button>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="grid grid-cols-3 gap-2 border-t border-gray-200/80 pt-6 text-center text-gray-600">
+              <div class="flex flex-col items-center gap-1.5">
+                <i data-lucide="truck" class="w-5 h-5 text-gray-800"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-800">FREE SHIPPING</span>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-5 h-5 text-gray-800"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-800">MUSEUM GRADE</span>
+              </div>
+              <div class="flex flex-col items-center gap-1.5">
+                <i data-lucide="rotate-ccw" class="w-5 h-5 text-gray-800"></i>
+                <span class="text-[9px] font-bold uppercase tracking-wider text-gray-800">30 DAY RETURN</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Legacy & Sustainability Banner (2 Cards Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-20">
+          <!-- Left Card -->
+          <div class="md:col-span-7 bg-[#f9f8f4] p-10 md:p-14 flex flex-col justify-center">
+            <h3 class="font-serif text-2xl md:text-3xl font-medium text-gray-900 mb-4">
+              A Legacy of Craftsmanship
+            </h3>
+            <p class="text-sm text-gray-600 leading-relaxed mb-6">
+              Each frame is individually hand-gilded by master artisans. We use traditional techniques passed down
+              through generations to ensure every relief and flourish reflects authentic Victorian era aesthetics.
+            </p>
+            <a href="/about-us" onclick="event.preventDefault(); window.handlePathRouting('/about-us')"
+              class="font-bold text-xs tracking-wider text-gray-900 hover:underline inline-flex items-center gap-1">
+              EXPLORE THE PROCESS &rarr;
+            </a>
+          </div>
+
+          <!-- Right Card -->
+          <div
+            class="md:col-span-5 bg-black text-white p-10 md:p-14 flex flex-col items-center justify-center text-center">
+            <i data-lucide="leaf" class="w-10 h-10 text-[#d4af37] mb-4 stroke-[1.5]"></i>
+            <h3 class="font-serif text-2xl md:text-3xl font-medium text-white mb-3">
+              Sustainable Sourcing
+            </h3>
+            <p class="text-sm text-gray-300 leading-relaxed max-w-sm">
+              Our wood is sourced from FSC-certified forests, ensuring your art is framed with respect for the
+              environment.
+            </p>
+          </div>
+        </div>
+
+        <!-- Customer Reviews Section -->
+        <div class="border-t border-gray-200/80 pt-16 mb-16">
+          <h2 class="font-serif text-2xl md:text-3xl font-medium text-gray-900 mb-10">
+            Customer Reviews
+          </h2>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <!-- Left Review Breakdown (4 cols) -->
+            <div class="lg:col-span-4 bg-[#f5f4f2] p-8">
+              <div class="text-5xl font-extrabold text-gray-900 mb-1">4.8</div>
+              <div class="flex text-amber-500 text-lg mb-1">★★★★★</div>
+              <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">BASED ON 94 REVIEWS</p>
+
+              <!-- Rating Progress Bars -->
+              <div class="space-y-2 mb-8 text-xs text-gray-600">
+                <div class="flex items-center gap-3">
+                  <span class="w-3 font-bold">5</span>
+                  <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#855d28] h-full w-[85%]"></div>
+                  </div>
+                  <span class="w-8 text-right text-gray-400">85%</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 font-bold">4</span>
+                  <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#855d28] h-full w-[10%]"></div>
+                  </div>
+                  <span class="w-8 text-right text-gray-400">10%</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 font-bold">3</span>
+                  <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#855d28] h-full w-[3%]"></div>
+                  </div>
+                  <span class="w-8 text-right text-gray-400">3%</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 font-bold">2</span>
+                  <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#855d28] h-full w-[1%]"></div>
+                  </div>
+                  <span class="w-8 text-right text-gray-400">1%</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="w-3 font-bold">1</span>
+                  <div class="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-[#855d28] h-full w-[1%]"></div>
+                  </div>
+                  <span class="w-8 text-right text-gray-400">1%</span>
+                </div>
+              </div>
+
+              <button type="button"
+                class="w-full bg-white border border-gray-300 hover:border-black py-3 text-xs font-bold uppercase tracking-wider text-gray-900 transition cursor-pointer">
+                WRITE A REVIEW
+              </button>
+            </div>
+
+            <!-- Right Reviews List (8 cols) -->
+            <div class="lg:col-span-8 space-y-8">
+              <!-- Review 1 -->
+              <div class="border-b border-gray-200/80 pb-8">
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex text-amber-500 text-sm">★★★★★</div>
+                  <span class="bg-[#f0efeb] text-[10px] font-bold text-gray-500 px-2 py-0.5 uppercase tracking-wider">
+                    VERIFIED PURCHASE
+                  </span>
+                </div>
+                <h4 class="font-bold text-gray-900 text-base mb-1">Exceptional quality and finish</h4>
+                <p class="text-xs text-gray-400 mb-3">Eleanor R. &bull; October 12, 2023</p>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                  The frame is even more beautiful in person. The gold leaf has a stunning depth to it that you just
+                  don't see in mass-produced frames. It truly elevated my family's oil portrait to museum quality.
+                </p>
+              </div>
+
+              <!-- Review 2 -->
+              <div class="border-b border-gray-200/80 pb-8">
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex text-amber-500 text-sm">★★★★<span class="text-gray-300">★</span></div>
+                  <span class="bg-[#f0efeb] text-[10px] font-bold text-gray-500 px-2 py-0.5 uppercase tracking-wider">
+                    VERIFIED PURCHASE
+                  </span>
+                </div>
+                <h4 class="font-bold text-gray-900 text-base mb-1">Classic elegance for a modern home</h4>
+                <p class="text-xs text-gray-400 mb-3">Julian M. &bull; September 28, 2023</p>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                  I was worried it might be too 'busy' for my living room, but the craftsmanship is so refined that it
+                  actually works perfectly as a statement piece. Extremely well-packaged and arrived without a scratch.
+                </p>
+              </div>
+
+              <button type="button"
+                class="font-bold text-xs tracking-wider text-gray-900 uppercase hover:underline flex items-center gap-1 cursor-pointer">
+                VIEW ALL REVIEWS &darr;
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -7281,6 +7515,51 @@
       }
     }
 
+    window.selectPdSize = function (sizeKey, btnEl) {
+      document.querySelectorAll('.pd-size-btn').forEach(btn => {
+        btn.className = 'pd-size-btn bg-white text-gray-800 hover:border-black py-3 px-2 text-xs font-bold border border-gray-300 text-center transition cursor-pointer';
+      });
+      if (btnEl) {
+        btnEl.className = 'pd-size-btn bg-black text-white py-3 px-2 text-xs font-bold border border-black text-center transition cursor-pointer';
+      }
+    };
+
+    window.selectPdMaterial = function (matName, btnEl) {
+      document.querySelectorAll('.pd-mat-btn span.rounded-full').forEach(span => {
+        span.classList.remove('border-black');
+        span.classList.add('border-transparent');
+      });
+      document.querySelectorAll('.pd-mat-btn span.text-gray-900').forEach(span => {
+        span.classList.remove('text-gray-900');
+        span.classList.add('text-gray-500');
+      });
+      if (btnEl) {
+        const circle = btnEl.querySelector('span.rounded-full');
+        const label = btnEl.querySelector('span.text-[9px]');
+        if (circle) { circle.classList.remove('border-transparent'); circle.classList.add('border-black'); }
+        if (label) { label.classList.remove('text-gray-500'); label.classList.add('text-gray-900'); }
+      }
+    };
+
+    window.switchPdImage = function (imgSrc, btnEl) {
+      const mainImg = document.getElementById('pd-main-image');
+      if (mainImg) {
+        mainImg.style.opacity = '0.4';
+        setTimeout(() => {
+          mainImg.src = imgSrc;
+          mainImg.style.opacity = '1';
+        }, 120);
+      }
+      document.querySelectorAll('.pd-thumb-btn').forEach(btn => {
+        btn.classList.remove('border-black');
+        btn.classList.add('border-transparent');
+      });
+      if (btnEl) {
+        btnEl.classList.remove('border-transparent');
+        btnEl.classList.add('border-black');
+      }
+    };
+
     window.openProductDetail = function (productId) {
       const product = productTemplates.find(p => p.id === productId || slugify(p.name) === productId);
       let finalProduct = product;
@@ -7296,80 +7575,104 @@
 
       if (!finalProduct) return;
 
-      if (!window.activeProductRouting) {
-        const slug = slugify(finalProduct.name);
-        const path = `/products/${slug}`;
-        try {
-          window.history.pushState({ view: 'product', productId: finalProduct.id || slug }, "", path);
-        } catch (e) {
-          console.warn("Failed to push history state:", e);
-        }
-        window.handlePathRouting(path, false);
-      } else {
-        window.renderProductDetail(finalProduct);
+      const slug = slugify(finalProduct.name);
+      const path = `/products/${slug}`;
+      try {
+        window.history.pushState({ view: 'product', productId: finalProduct.id || slug }, "", path);
+      } catch (e) {
+        console.warn("Failed to push history state:", e);
       }
+      window.renderProductDetail(finalProduct);
     };
 
     window.renderProductDetail = function (product) {
-      // Set product name
-      document.getElementById('product-detail-name').textContent = product.name;
-      document.getElementById('product-detail-title').textContent = product.name;
+      if (!product) return;
 
-      // Set price
-      const hasSale = product.saleActive && product.salePrice != null;
-      if (hasSale) {
-        document.getElementById('product-detail-price').innerHTML = `<span class="line-through text-slate/60 text-2xl mr-3">${window.appCurrency || '$'}${product.price.toFixed(2)}</span>${window.appCurrency || '$'}${product.salePrice.toFixed(2)}`;
+      // 1. Ensure main landing wrapper is active while hiding secondary views
+      const views = ['dashboard', 'editor', 'admin', 'checkout'];
+      views.forEach(v => {
+        const el = document.getElementById(v + '-view');
+        if (el) el.classList.add('hidden');
+      });
+      const landingView = document.getElementById('landing-view');
+      if (landingView) landingView.classList.remove('hidden');
+
+      // 2. Hide homepage landing content sections (hero, frames/category, about, contact)
+      window.showLandingContentSections(false);
+
+      // 3. Unhide product-detail-view immediately
+      const pdView = document.getElementById('product-detail-view');
+      if (pdView) pdView.classList.remove('hidden');
+
+      // 4. Populate product details
+      const name = product.name || 'Ornate Victorian Gilt';
+      const finalPrice = (product.saleActive && product.salePrice != null) ? product.salePrice : (product.price || 195.00);
+      const origPrice = product.price ? product.price * 1.28 : finalPrice * 1.28;
+
+      const prodNameEl = document.getElementById('pd-product-name');
+      const breadcrumbEl = document.getElementById('pd-breadcrumb-title');
+      const priceEl = document.getElementById('pd-price');
+      const origPriceEl = document.getElementById('pd-original-price');
+      const descEl = document.getElementById('pd-description');
+
+      if (prodNameEl) prodNameEl.textContent = name;
+      if (breadcrumbEl) breadcrumbEl.textContent = name;
+      if (priceEl) priceEl.textContent = `${window.appCurrency || '$'}${finalPrice.toFixed(2)}`;
+      if (origPriceEl) origPriceEl.textContent = `${window.appCurrency || '$'}${origPrice.toFixed(2)}`;
+      if (descEl && product.description) descEl.textContent = product.description;
+
+      // 5. Populate main image & gallery thumbnails
+      let imageList = [];
+      if (product.images && product.images.length > 0) {
+        imageList = product.images;
+      } else if (product.frameImage) {
+        imageList = [
+          product.frameImage,
+          'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&q=80&w=800',
+          'https://images.unsplash.com/photo-1582560475093-ba66accbc424?auto=format&fit=crop&q=80&w=800',
+          'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800'
+        ];
       } else {
-        document.getElementById('product-detail-price').textContent = `${window.appCurrency || '$'}${product.price.toFixed(2)}`;
+        imageList = [
+          'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&q=80&w=800',
+          'https://images.unsplash.com/photo-1582560475093-ba66accbc424?auto=format&fit=crop&q=80&w=800',
+          'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=800',
+          'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=800'
+        ];
       }
 
-      // Set main image and thumbnails
-      const mainImage = document.getElementById('product-detail-main-image');
-      const thumbnailsContainer = document.getElementById('product-detail-thumbnails');
-      const imageContainer = document.getElementById('product-detail-image-container');
+      const mainImg = document.getElementById('pd-main-image');
+      if (mainImg) mainImg.src = imageList[0];
 
-      if (product.frameImage && product.bgImage) {
-        // Render stacked smart template via Scanner
-        imageContainer.className = "product-preview-container aspect-square rounded-xl overflow-hidden bg-editorbg border border-sand shadow-inner p-4 flex items-center justify-center";
-        imageContainer.innerHTML = `<div class="smart-preview-${product.id} w-full h-full flex items-center justify-center"><i data-lucide="loader-2" class="w-8 h-8 text-flame animate-spin"></i></div>`;
-        thumbnailsContainer.innerHTML = '';
-
-        // Execute Smart Scanner for Modal
-        window.renderSmartPreview(product.id, product.frameImage, product.bgImage, product.name);
-      }
-      else if (product.images && product.images.length > 0) {
-        // Fallback for old templates
-        imageContainer.className = "product-preview-container aspect-square rounded-xl overflow-hidden bg-editorbg border border-sand shadow-inner p-4 flex items-center justify-center";
-        imageContainer.innerHTML = `<img id="product-detail-main-image" src="${product.images[0]}" alt="${product.name}" class="w-full h-full object-contain">`;
-        thumbnailsContainer.innerHTML = product.images.map((img, idx) => `
-          <button onclick="document.getElementById('product-detail-main-image').src='${img}'" class="aspect-square rounded-lg overflow-hidden border-2 bg-white p-1 ${idx === 0 ? 'border-flame' : 'border-sand/50 hover:border-slate transition'}">
-            <img src="${img}" alt="Product thumbnail ${idx + 1}" class="w-full h-full object-contain">
+      const thumbsGrid = document.getElementById('pd-thumbnails-grid');
+      if (thumbsGrid) {
+        thumbsGrid.innerHTML = imageList.slice(0, 4).map((img, idx) => `
+          <button type="button" onclick="window.switchPdImage('${img}', this)" class="pd-thumb-btn aspect-square overflow-hidden bg-[#f4f3f0] border-2 ${idx === 0 ? 'border-black' : 'border-transparent hover:border-gray-300'} transition cursor-pointer p-0">
+            <img src="${img}" alt="Thumbnail ${idx + 1}" class="w-full h-full object-cover">
           </button>
         `).join('');
-      } else {
-        imageContainer.className = "product-preview-container aspect-square rounded-xl overflow-hidden bg-editorbg border border-sand shadow-inner p-4 flex items-center justify-center";
-        const defaultImg = 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=800&h=800';
-        imageContainer.innerHTML = `<img id="product-detail-main-image" src="${defaultImg}" alt="${product.name}" class="w-full h-full object-contain">`;
-        thumbnailsContainer.innerHTML = '';
       }
 
-      // Update add to cart button
-      document.getElementById('product-detail-cart-btn').onclick = () => {
-        const finalPrice = (product.saleActive && product.salePrice != null) ? product.salePrice : product.price;
-        addStoreItemToCart(product.name, finalPrice);
-        toggleModal('product-detail-modal');
-      };
+      // 6. Update Action Buttons
+      const cartBtn = document.getElementById('pd-add-to-cart-btn');
+      if (cartBtn) {
+        cartBtn.onclick = () => {
+          addStoreItemToCart(name, finalPrice);
+          showToast(`Added ${name} to cart!`);
+        };
+      }
 
-      // Update customize button to send the product directly to the editor as a layer
-      document.getElementById('product-detail-customize-btn').onclick = () => {
-        toggleModal('product-detail-modal');
-        loadProductIntoEditor(product);
-      };
+      const customizeBtn = document.getElementById('pd-customize-btn');
+      if (customizeBtn) {
+        customizeBtn.onclick = () => {
+          loadProductIntoEditor(product);
+        };
+      }
 
-      // Show modal
-      toggleModal('product-detail-modal');
-      lucide.createIcons();
-    }
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (window.lucide) lucide.createIcons();
+    };
+
 
     window.loadProductIntoEditor = (product) => {
       window.activeFrameProduct = product;
@@ -8004,10 +8307,8 @@
       });
     };
 
-    // Toggle Homepage Content Sections
-    // Toggle Homepage Content Sections
     window.showLandingContentSections = (show) => {
-      const sections = ['hero', 'frames-section', 'contact-section', 'about-section'];
+      const sections = ['hero', 'frames-section', 'category-section', 'contact-section', 'about-section'];
       sections.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -8016,7 +8317,7 @@
         }
       });
 
-      const additionalSections = ['faq-section', 'orders-tracking-section', 'user-profile-section', 'user-settings-section', 'dynamic-page-section', 'blog-index-section'];
+      const additionalSections = ['product-detail-view', 'faq-section', 'orders-tracking-section', 'user-profile-section', 'user-settings-section', 'dynamic-page-section', 'blog-index-section'];
       additionalSections.forEach(id => {
         const el = document.getElementById(id);
         if (el && show) el.classList.add('hidden');
@@ -9828,7 +10129,7 @@
         });
       }
       else if (isProductPath && productId) {
-        window.switchView('landing', false);
+        window.showLandingContentSections(false);
 
         const resolveAndShowProduct = () => {
           let product = productTemplates.find(p => p.id === productId || slugify(p.name) === productId);
@@ -9897,11 +10198,7 @@
           }
         };
 
-        if (productTemplates.length === 0) {
-          setTimeout(resolveAndShowProduct, 400);
-        } else {
-          resolveAndShowProduct();
-        }
+        resolveAndShowProduct();
       }
       else if (cmsPage) {
         window.switchView('landing', false);
@@ -10351,7 +10648,7 @@
         if (currentUser) {
           try {
             await db.collection('users').doc(currentUser.uid).collection('cart').doc(id).set({ quantity: newQty, qty: newQty }, { merge: true });
-          } catch(e) {}
+          } catch (e) { }
         }
       }
     };
@@ -15096,7 +15393,8 @@
             </div>
           </div>
         </div>
-        <button onclick="window.toggleUserChat()" class="text-gray-400 hover:text-white transition p-1 cursor-pointer" aria-label="Close Chat">
+        <button onclick="window.toggleUserChat()" class="text-gray-400 hover:text-white transition p-1 cursor-pointer"
+          aria-label="Close Chat">
           <i data-lucide="x" class="w-6 h-6 stroke-[2]"></i>
         </button>
       </div>
@@ -15104,7 +15402,8 @@
       <!-- Messages Body -->
       <div id="user-chat-messages" class="flex-1 overflow-y-auto p-5 space-y-5 bg-white">
         <div class="flex flex-col items-start w-full">
-          <div class="max-w-[82%] bg-[#eaeaea] text-[#111111] p-4 rounded-md text-[14px] leading-relaxed font-sans shadow-none">
+          <div
+            class="max-w-[82%] bg-[#eaeaea] text-[#111111] p-4 rounded-md text-[14px] leading-relaxed font-sans shadow-none">
             Hello! Welcome to FrameCraft. How can we help you preserve your memories today?
           </div>
           <span class="text-[11px] text-gray-400 mt-1.5 ml-1 font-normal">Welcome</span>
@@ -15114,11 +15413,14 @@
       <!-- Footer Input Area -->
       <div class="p-4 border-t border-gray-200/80 bg-white shrink-0">
         <form onsubmit="window.sendUserChatMessage(event)" class="w-full">
-          <div class="w-full bg-[#f3f3f3] rounded-lg px-4 py-3 flex items-center gap-2 border border-transparent focus-within:border-gray-300 transition-colors">
+          <div
+            class="w-full bg-[#f3f3f3] rounded-lg px-4 py-3 flex items-center gap-2 border border-transparent focus-within:border-gray-300 transition-colors">
             <input type="text" id="user-chat-input"
               class="w-full bg-transparent border-none outline-none focus:outline-none text-[14px] text-gray-900 placeholder:text-gray-400 font-sans p-0 m-0 shadow-none ring-0 focus:ring-0"
               placeholder="Type a message..." autocomplete="off">
-            <button type="submit" class="text-black hover:text-gray-700 transition shrink-0 p-0 border-none bg-transparent cursor-pointer flex items-center justify-center" aria-label="Send Message">
+            <button type="submit"
+              class="text-black hover:text-gray-700 transition shrink-0 p-0 border-none bg-transparent cursor-pointer flex items-center justify-center"
+              aria-label="Send Message">
               <i data-lucide="send" class="w-5 h-5 stroke-[2]"></i>
             </button>
           </div>
@@ -15128,7 +15430,8 @@
 
     <!-- Floating Button -->
     <button onclick="window.toggleUserChat()"
-      class="w-14 h-14 bg-primary hover:bg-charcoal text-on-primary rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-105 relative cursor-pointer" aria-label="Toggle Support Chat">
+      class="w-14 h-14 bg-primary hover:bg-charcoal text-on-primary rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-105 relative cursor-pointer"
+      aria-label="Toggle Support Chat">
       <i data-lucide="message-circle" class="w-6 h-6"></i>
       <span id="user-chat-unread-badge"
         class="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] font-black w-5 h-5 rounded-full items-center justify-center hidden border-2 border-white">0</span>
