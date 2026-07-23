@@ -9344,7 +9344,7 @@
             middleElement.dataset.frameSlices = JSON.stringify({ sliceLeft, sliceTop, sliceRight, sliceBottom, srcW: middle.visibleW, srcH: middle.visibleH });
           }
 
-          middleElement.innerHTML = `<img src="${middleFrameData.image}" crossorigin="anonymous" style="width:100%; height:100%;" class="pointer-events-none block drop-shadow-lg">`;
+          middleElement.innerHTML = `<img src="${croppedMidSrc || middleFrameData.image}" crossorigin="anonymous" style="position: absolute; left: ${middle.minX * midScaleX}px; top: ${middle.minY * midScaleY}px; width: ${middle.visibleW * midScaleX}px; height: ${middle.visibleH * midScaleY}px;" class="pointer-events-none block drop-shadow-lg">`;
 
           lastHoleLeft = lastHoleLeft + (middle.holeMinX - middle.minX) * midScaleX;
           lastHoleTop = lastHoleTop + (middle.holeMinY - middle.minY) * midScaleY;
@@ -9393,7 +9393,7 @@
             innerElement.dataset.frameSlices = JSON.stringify({ sliceLeft, sliceTop, sliceRight, sliceBottom, srcW: inner.visibleW, srcH: inner.visibleH });
           }
 
-          innerElement.innerHTML = `<img src="${innerFrameData.image}" crossorigin="anonymous" style="width:100%; height:100%;" class="pointer-events-none block drop-shadow-md">`;
+          innerElement.innerHTML = `<img src="${croppedInnerSrc || innerFrameData.image}" crossorigin="anonymous" style="position: absolute; left: ${inner.minX * innerScaleX}px; top: ${inner.minY * innerScaleY}px; width: ${inner.visibleW * innerScaleX}px; height: ${inner.visibleH * innerScaleY}px;" class="pointer-events-none block drop-shadow-md">`;
 
           lastHoleLeft = lastHoleLeft + (inner.holeMinX - inner.minX) * innerScaleX;
           lastHoleTop = lastHoleTop + (inner.holeMinY - inner.minY) * innerScaleY;
@@ -9446,7 +9446,7 @@
           const sliceBottom = Math.max(1, outer.visibleH - (outer.holeMaxY - outer.minY));
           frameWrap.dataset.frameSlices = JSON.stringify({ sliceLeft, sliceTop, sliceRight, sliceBottom, srcW: outer.visibleW, srcH: outer.visibleH });
         }
-        frameWrap.innerHTML = `<img src="${outerFrameData.image}" crossorigin="anonymous" style="width:100%; height:100%;" class="pointer-events-none block drop-shadow-xl">`;
+        frameWrap.innerHTML = `<img src="${croppedFrameSrc || outerFrameData.image}" crossorigin="anonymous" style="position: absolute; left: ${outer.minX * outerScaleX}px; top: ${outer.minY * outerScaleY}px; width: ${outer.visibleW * outerScaleX}px; height: ${outer.visibleH * outerScaleY}px;" class="pointer-events-none block drop-shadow-xl">`;
 
         // Append in bottom-to-top order
         artLayer.appendChild(bgWrap);
