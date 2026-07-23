@@ -5869,7 +5869,8 @@
         </div>
 
         <!-- FRAME CUSTOMIZATION PROPERTIES PANEL -->
-        <div id="panel-frame-customization" class="tool-panel-content hidden p-5 flex flex-col h-full overflow-y-auto no-scrollbar">
+        <div id="panel-frame-customization"
+          class="tool-panel-content hidden p-5 flex flex-col h-full overflow-y-auto no-scrollbar">
           <h3 class="text-charcoal font-extrabold text-lg mb-6 flex items-center gap-2">
             <i data-lucide="sliders" class="w-5 h-5 text-flame"></i> Customize Layer
           </h3>
@@ -6621,8 +6622,8 @@
       const decor = Array.from(document.querySelectorAll('#artwork-layer .canvas-item'))
         .filter(item => {
           const role = item.dataset.frameRole;
-          return role !== 'frame' && role !== 'middle-frame' && role !== 'inner-frame' && role !== 'artwork' && 
-                 (parseFloat(item.dataset.cost) || 0) >= 0 && item.dataset.itemName;
+          return role !== 'frame' && role !== 'middle-frame' && role !== 'inner-frame' && role !== 'artwork' &&
+            (parseFloat(item.dataset.cost) || 0) >= 0 && item.dataset.itemName;
         })
         .map(item => ({ name: item.dataset.itemName, price: parseFloat(item.dataset.cost) || 0 }));
       return { product: config.productName || document.getElementById('editor-project-title').innerText, frame: config.productName || 'Custom Frame', size: config.size ? { width: config.size.width, height: config.size.height, name: config.size.name || `${config.size.width} × ${config.size.height}` } : null, colour: config.colour || null, thickness: config.dynamicThickness ? config.thickness || 100 : null, decor, quantity: 1, pricing: calculateCanvasCost() };
@@ -9135,10 +9136,30 @@
     window.scanGeometryCache = {};
 
     window.scanImageGeometry = (imageSrc) => {
+      const getFallbackResult = () => ({
+        img: null,
+        imgW: 1000,
+        imgH: 1000,
+        minX: 0,
+        minY: 0,
+        maxX: 1000,
+        maxY: 1000,
+        holeMinX: 100,
+        holeMinY: 100,
+        holeMaxX: 900,
+        holeMaxY: 900,
+        visibleW: 1000,
+        visibleH: 1000,
+        isFallback: true
+      });
+
+      if (!imageSrc) {
+        return Promise.resolve(getFallbackResult());
+      }
       if (window.scanGeometryCache[imageSrc]) {
         return Promise.resolve(window.scanGeometryCache[imageSrc]);
       }
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
@@ -9243,7 +9264,12 @@
           window.scanGeometryCache[imageSrc] = result;
           resolve(result);
         };
-        img.onerror = (e) => reject(e);
+        img.onerror = (e) => {
+          console.warn("Scan Image failed to load, resolving fallback:", imageSrc, e);
+          const fallback = getFallbackResult();
+          window.scanGeometryCache[imageSrc] = fallback;
+          resolve(fallback);
+        };
         img.src = imageSrc;
       });
     };
@@ -9783,31 +9809,56 @@
     window.updateSingleFrameColourOverlay = (frameEl, colourConfig, thicknessConfig = 100) => {
       if (!frameEl) return;
       if (!colourConfig) {
-        const existing = frameEl.querySelector('.frame-colour-overlay');
-        if (existing) existing.remove();
+        const existingColor = frameEl.querySelector('.frame-colour-overlay');
+        const existingLuma = frameEl.querySelector('.frame-luma-overlay');
+        const existingMultiply = frameEl.querySelector('.frame-multiply-overlay');
+        if (existingColor) existingColor.remove();
+        if (existingLuma) existingLuma.remove();
+        if (existingMultiply) existingMultiply.remove();
         return;
       }
 
       const bounds = JSON.parse(frameEl.dataset.frameBounds || '{}');
       const slices = JSON.parse(frameEl.dataset.frameSlices || 'null');
       if (!slices || !bounds || !bounds.imgW || !bounds.imgH) {
-        const existing = frameEl.querySelector('.frame-colour-overlay');
-        if (existing) existing.remove();
+        const existingColor = frameEl.querySelector('.frame-colour-overlay');
+        const existingLuma = frameEl.querySelector('.frame-luma-overlay');
+        const existingMultiply = frameEl.querySelector('.frame-multiply-overlay');
+        if (existingColor) existingColor.remove();
+        if (existingLuma) existingLuma.remove();
+        if (existingMultiply) existingMultiply.remove();
         return;
       }
       frameEl.style.isolation = 'isolate';
 
-      let overlay = frameEl.querySelector('.frame-colour-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.className = 'frame-colour-overlay pointer-events-none absolute';
-        overlay.style.boxSizing = 'border-box';
-        overlay.style.borderStyle = 'solid';
-        overlay.style.background = 'transparent';
-        overlay.style.mixBlendMode = 'color';
-        overlay.style.opacity = '.72';
-        overlay.style.zIndex = '5';
-        frameEl.appendChild(overlay);
+      // Clean up the old multiply layer if it exists from previous code
+      const oldMultiply = frameEl.querySelector('.frame-multiply-overlay');
+      if (oldMultiply) oldMultiply.remove();
+
+      let overlayColor = frameEl.querySelector('.frame-colour-overlay');
+      if (!overlayColor) {
+        overlayColor = document.createElement('div');
+        overlayColor.className = 'frame-colour-overlay pointer-events-none absolute';
+        overlayColor.style.boxSizing = 'border-box';
+        overlayColor.style.borderStyle = 'solid';
+        overlayColor.style.background = 'transparent';
+        overlayColor.style.mixBlendMode = 'color';
+        overlayColor.style.opacity = '1'; // Full hue replacement
+        overlayColor.style.zIndex = '5';
+        frameEl.appendChild(overlayColor);
+      }
+
+      let overlayLuma = frameEl.querySelector('.frame-luma-overlay');
+      if (!overlayLuma) {
+        overlayLuma = document.createElement('div');
+        overlayLuma.className = 'frame-luma-overlay pointer-events-none absolute';
+        overlayLuma.style.boxSizing = 'border-box';
+        overlayLuma.style.borderStyle = 'solid';
+        overlayLuma.style.background = 'transparent';
+        overlayLuma.style.mixBlendMode = 'overlay'; // Better than multiply for light colors/white
+        overlayLuma.style.opacity = '0.85'; // High opacity pushes brightness to match selected color perfectly
+        overlayLuma.style.zIndex = '6';
+        frameEl.appendChild(overlayLuma);
       }
 
       const sx = frameEl.offsetWidth / bounds.imgW;
@@ -9819,11 +9870,17 @@
       const visW = visibleW * sx;
       const visH = visibleH * sy;
 
-      overlay.style.left = `${visLeft}px`;
-      overlay.style.top = `${visTop}px`;
-      overlay.style.width = `${visW}px`;
-      overlay.style.height = `${visH}px`;
-      overlay.style.borderColor = colourConfig.value;
+      overlayColor.style.left = `${visLeft}px`;
+      overlayColor.style.top = `${visTop}px`;
+      overlayColor.style.width = `${visW}px`;
+      overlayColor.style.height = `${visH}px`;
+      overlayColor.style.borderColor = colourConfig.value;
+
+      overlayLuma.style.left = `${visLeft}px`;
+      overlayLuma.style.top = `${visTop}px`;
+      overlayLuma.style.width = `${visW}px`;
+      overlayLuma.style.height = `${visH}px`;
+      overlayLuma.style.borderColor = colourConfig.value;
 
       const scaleX = visW / (slices.srcW || visibleW || 1);
       const scaleY = visH / (slices.srcH || visibleH || 1);
@@ -9836,10 +9893,15 @@
       const topPx = Math.min(maxYInset, Math.max(1, slices.sliceTop * scaleY * mult));
       const bottomPx = Math.min(maxYInset, Math.max(1, slices.sliceBottom * scaleY * mult));
 
-      overlay.style.borderLeftWidth = `${leftPx}px`;
-      overlay.style.borderRightWidth = `${rightPx}px`;
-      overlay.style.borderTopWidth = `${topPx}px`;
-      overlay.style.borderBottomWidth = `${bottomPx}px`;
+      overlayColor.style.borderLeftWidth = `${leftPx}px`;
+      overlayColor.style.borderRightWidth = `${rightPx}px`;
+      overlayColor.style.borderTopWidth = `${topPx}px`;
+      overlayColor.style.borderBottomWidth = `${bottomPx}px`;
+
+      overlayLuma.style.borderLeftWidth = `${leftPx}px`;
+      overlayLuma.style.borderRightWidth = `${rightPx}px`;
+      overlayLuma.style.borderTopWidth = `${topPx}px`;
+      overlayLuma.style.borderBottomWidth = `${bottomPx}px`;
     };
 
     window.updateFrameColourOverlay = () => {
@@ -12500,7 +12562,7 @@
         const assets = window.globalAssets || [];
         const asset = assets.find(a => a.id === id);
         if (!asset) return showToast('Selected frame asset could not be found.');
-        
+
         targetFrameData = {
           name: asset.name,
           image: asset.imageURL || asset.image,
@@ -12559,6 +12621,30 @@
     async function loadGlobalAssets() {
       const snapshot = await db.collection('assets').orderBy('createdAt', 'desc').get();
       const assets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Ensure products are loaded so we can dynamically extract their layers
+      if (typeof productTemplates === 'undefined' || productTemplates.length === 0) {
+        try {
+          const prodSnap = await db.collection('products').orderBy('createdAt', 'desc').get();
+          productTemplates = prodSnap.docs.map(doc => window.normalizeProductData({ id: doc.id, ...doc.data() }));
+        } catch (e) { console.warn('Could not fetch products for elements tab', e); }
+      }
+
+      // Extract individual layers from all loaded products so they act as reusable elements
+      if (productTemplates && productTemplates.length > 0) {
+        productTemplates.forEach(p => {
+          if (p.outerFrame && p.outerFrame.image && !assets.some(a => a.imageURL === p.outerFrame.image)) {
+            assets.push({ id: 'prod-out-' + p.id, category: 'outer-frame', name: p.outerFrame.name || p.name, imageURL: p.outerFrame.image, price: p.outerFrame.price || 0, thickness: p.outerFrame.thickness || 2, colors: p.outerFrame.colors || [] });
+          }
+          if (p.middleFrame && p.middleFrame.image && !assets.some(a => a.imageURL === p.middleFrame.image)) {
+            assets.push({ id: 'prod-mid-' + p.id, category: 'middle-frame', name: p.middleFrame.name || p.name + ' Middle', imageURL: p.middleFrame.image, price: p.middleFrame.price || 0, thickness: p.middleFrame.thickness || 2, colors: p.middleFrame.colors || [] });
+          }
+          if (p.innerFrame && p.innerFrame.image && !assets.some(a => a.imageURL === p.innerFrame.image)) {
+            assets.push({ id: 'prod-in-' + p.id, category: 'inner-frame', name: p.innerFrame.name || p.name + ' Inner', imageURL: p.innerFrame.image, price: p.innerFrame.price || 0, thickness: p.innerFrame.thickness || 2, colors: p.innerFrame.colors || [] });
+          }
+        });
+      }
+
       window.globalAssets = assets;
 
       // Backward compatibility auto-migration for textures -> Background Texture
