@@ -9708,8 +9708,6 @@ window.rebuildEditorCanvasLayers = async (isInit = false) => {
           }
         }
       }
-        }
-      }
     };
 
     window.openFrameCustomizationPanel = () => {
@@ -9834,7 +9832,11 @@ window.rebuildEditorCanvasLayers = async (isInit = false) => {
 
       overlay.style.borderLeftWidth = `${leftPx}px`;
       overlay.style.borderRightWidth = `${rightPx}px`;
-      over    window.updateFrameColourOverlay = () => {
+      overlay.style.borderTopWidth = `${topPx}px`;
+      overlay.style.borderBottomWidth = `${bottomPx}px`;
+    };
+
+    window.updateFrameColourOverlay = () => {
       const config = window.activeFrameConfiguration;
       if (!config) return;
 
