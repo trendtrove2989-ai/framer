@@ -9316,6 +9316,7 @@
           middleElement.style.top = midTop + 'px';
           middleElement.dataset.type = 'image';
           middleElement.dataset.frameRole = 'middle-frame';
+          middleElement.dataset.cost = middleFrameData.price || 0;
           middleElement.dataset.itemName = middleFrameData.name || 'Middle Frame';
           middleElement.dataset.frameBounds = JSON.stringify({ imgW: middle.imgW, imgH: middle.imgH, minX: middle.minX, minY: middle.minY, maxX: middle.maxX, maxY: middle.maxY });
           middleElement.style.isolation = 'isolate';
@@ -9364,6 +9365,7 @@
           innerElement.style.top = innerTop + 'px';
           innerElement.dataset.type = 'image';
           innerElement.dataset.frameRole = 'inner-frame';
+          innerElement.dataset.cost = innerFrameData.price || 0;
           innerElement.dataset.itemName = innerFrameData.name || 'Inner Frame';
           innerElement.dataset.frameBounds = JSON.stringify({ imgW: inner.imgW, imgH: inner.imgH, minX: inner.minX, minY: inner.minY, maxX: inner.maxX, maxY: inner.maxY });
           innerElement.style.isolation = 'isolate';
@@ -12351,14 +12353,84 @@
       return Math.random().toString(36).substr(2, 9);
     }
 
-    window.selectFrameElement = (id, layerType) => {
-      console.log(`[Placeholder] Selected frame element: ${id} of layer type: ${layerType}`);
-      showToast(`Selected Frame ${layerType.toUpperCase()}: Ready for Phase 5 integration!`);
+    window.selectFrameElement = async (id, layerType) => {
+      const product = window.activeFrameProduct;
+      if (!product) return;
+
+      const config = window.activeFrameConfiguration;
+      let targetFrameData = null;
+
+      if (id === 'product-default') {
+        // Restore product default frame for this layer
+        if (layerType === 'outer') targetFrameData = product._originalOuterFrame;
+        else if (layerType === 'middle') targetFrameData = product._originalMiddleFrame;
+        else if (layerType === 'inner') targetFrameData = product._originalInnerFrame;
+      } else {
+        // Retrieve from cached global assets
+        const assets = window.globalAssets || [];
+        const asset = assets.find(a => a.id === id);
+        if (!asset) return showToast('Selected frame asset could not be found.');
+        
+        targetFrameData = {
+          name: asset.name,
+          image: asset.imageURL || asset.image,
+          price: typeof asset.price === 'number' ? asset.price : parseFloat(asset.price || 0),
+          colors: asset.colors || asset.colours || [],
+          thickness: typeof asset.thickness === 'number' ? asset.thickness : parseFloat(asset.thickness || 2.0)
+        };
+      }
+
+      if (!targetFrameData) return;
+
+      // Update activeFrameProduct layer properties (state management)
+      if (layerType === 'outer') {
+        product.outerFrame = targetFrameData;
+        config.outerColour = targetFrameData.colors?.[0] || null;
+        config.colour = targetFrameData.colors?.[0] || null;
+      } else if (layerType === 'middle') {
+        product.middleFrame = targetFrameData;
+        config.middleColour = targetFrameData.colors?.[0] || null;
+      } else if (layerType === 'inner') {
+        product.innerFrame = targetFrameData;
+        config.innerColour = targetFrameData.colors?.[0] || null;
+      }
+
+      showToast(`Replaced ${layerType.toUpperCase()} frame layer.`);
+
+      // Recalculate layers and pricing estimates immediately
+      await window.rebuildEditorCanvasLayers(false);
+      window.syncFrameCustomizationPanels();
+      window.showPricePreview();
+    };
+
+    window.updateElementsTabsVisibility = () => {
+      const product = window.activeFrameProduct;
+      if (!product) return;
+
+      const normProduct = window.normalizeProductData(product);
+      const tabs = document.querySelectorAll('#elements-tabs button');
+      tabs.forEach(btn => {
+        const clickAttr = btn.getAttribute('onclick') || '';
+        if (clickAttr.includes('middle-frame')) {
+          if (normProduct.middleFrame && normProduct.middleFrame.image) {
+            btn.style.display = '';
+          } else {
+            btn.style.display = 'none';
+          }
+        } else if (clickAttr.includes('inner-frame')) {
+          if (normProduct.innerFrame && normProduct.innerFrame.image) {
+            btn.style.display = '';
+          } else {
+            btn.style.display = 'none';
+          }
+        }
+      });
     };
 
     async function loadGlobalAssets() {
       const snapshot = await db.collection('assets').orderBy('createdAt', 'desc').get();
       const assets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      window.globalAssets = assets;
 
       // Backward compatibility auto-migration for textures -> Background Texture
       assets.forEach(async a => {
@@ -12384,38 +12456,54 @@
       const decor = assets.filter(a => a.category === 'decor');
       const textures = assets.filter(a => a.category === 'textures' || a.category === 'texture');
 
-      if (outerContainer) {
-        outerContainer.innerHTML = outerFrames.length > 0
-          ? `<div class="grid grid-cols-2 gap-3">` + outerFrames.map(f => `
-              <button onclick="window.selectFrameElement('${f.id}', 'outer')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex flex-col items-center justify-center">
-                <img src="${f.imageURL}" class="max-w-full max-h-[70%] object-contain pointer-events-none">
-                <span class="text-[9px] font-bold text-charcoal mt-1 truncate max-w-full">${f.name || 'Outer Frame'}</span>
+      // Helper to render frame selection grid showing Product + Global list
+      const renderFrameCategory = (container, productDefaultFrame, globalList, layerType) => {
+        if (!container) return;
+        let html = '';
+
+        if (productDefaultFrame && productDefaultFrame.image) {
+          html += `
+            <div class="mb-4">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-flame mb-2 block">Included with Product</span>
+              <button onclick="window.selectFrameElement('product-default', '${layerType}')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex flex-col items-center justify-center w-full max-w-[140px] shadow-sm">
+                <img src="${productDefaultFrame.image}" class="max-w-full max-h-[70%] object-contain pointer-events-none rounded-lg">
+                <span class="text-[9px] font-bold text-charcoal mt-1 truncate max-w-full">${productDefaultFrame.name || 'Default Frame'}</span>
               </button>
-            `).join('') + `</div>`
-          : `<p class="text-xs font-bold text-slate text-center mt-4">Outer Frame elements added by admin will appear here.</p>`;
+            </div>
+            <div class="h-px bg-sand/30 my-3"></div>
+          `;
+        }
+
+        if (globalList.length > 0) {
+          html += `
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate mb-2 block">Global Frame Elements</span>
+            <div class="grid grid-cols-2 gap-3">
+          `;
+          html += globalList.map(f => `
+            <button onclick="window.selectFrameElement('${f.id}', '${layerType}')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex flex-col items-center justify-center">
+              <img src="${f.imageURL}" class="max-w-full max-h-[70%] object-contain pointer-events-none">
+              <span class="text-[9px] font-bold text-charcoal mt-1 truncate max-w-full">${f.name || 'Frame Element'}</span>
+            </button>
+          `).join('');
+          html += `</div>`;
+        } else {
+          html += `<p class="text-xs font-bold text-slate text-center mt-4">Global Frame elements added by admin will appear here.</p>`;
+        }
+
+        container.innerHTML = html;
+      };
+
+      // Find the active product's default frames (keep original frames cached for restoration)
+      if (window.activeFrameProduct) {
+        if (!window.activeFrameProduct._originalOuterFrame) window.activeFrameProduct._originalOuterFrame = JSON.parse(JSON.stringify(window.activeFrameProduct.outerFrame || {}));
+        if (!window.activeFrameProduct._originalMiddleFrame) window.activeFrameProduct._originalMiddleFrame = JSON.parse(JSON.stringify(window.activeFrameProduct.middleFrame || {}));
+        if (!window.activeFrameProduct._originalInnerFrame) window.activeFrameProduct._originalInnerFrame = JSON.parse(JSON.stringify(window.activeFrameProduct.innerFrame || {}));
       }
 
-      if (middleContainer) {
-        middleContainer.innerHTML = middleFrames.length > 0
-          ? `<div class="grid grid-cols-2 gap-3">` + middleFrames.map(f => `
-              <button onclick="window.selectFrameElement('${f.id}', 'middle')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex flex-col items-center justify-center">
-                <img src="${f.imageURL}" class="max-w-full max-h-[70%] object-contain pointer-events-none">
-                <span class="text-[9px] font-bold text-charcoal mt-1 truncate max-w-full">${f.name || 'Middle Frame'}</span>
-              </button>
-            `).join('') + `</div>`
-          : `<p class="text-xs font-bold text-slate text-center mt-4">Middle Frame elements added by admin will appear here.</p>`;
-      }
-
-      if (innerContainer) {
-        innerContainer.innerHTML = innerFrames.length > 0
-          ? `<div class="grid grid-cols-2 gap-3">` + innerFrames.map(f => `
-              <button onclick="window.selectFrameElement('${f.id}', 'inner')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex flex-col items-center justify-center">
-                <img src="${f.imageURL}" class="max-w-full max-h-[70%] object-contain pointer-events-none">
-                <span class="text-[9px] font-bold text-charcoal mt-1 truncate max-w-full">${f.name || 'Inner Frame'}</span>
-              </button>
-            `).join('') + `</div>`
-          : `<p class="text-xs font-bold text-slate text-center mt-4">Inner Frame elements added by admin will appear here.</p>`;
-      }
+      const activeProduct = window.activeFrameProduct;
+      renderFrameCategory(outerContainer, activeProduct?._originalOuterFrame, outerFrames, 'outer');
+      renderFrameCategory(middleContainer, activeProduct?._originalMiddleFrame, middleFrames, 'middle');
+      renderFrameCategory(innerContainer, activeProduct?._originalInnerFrame, innerFrames, 'inner');
 
       if (textureContainer) {
         textureContainer.innerHTML = textures.length > 0
@@ -12428,6 +12516,8 @@
           ? `<div class="grid grid-cols-2 gap-3">` + decor.map(d => `<button onclick="addGalleryImageToCanvas('${d.imageURL}', ${d.cost || 0}, '${d.name || 'Decor Item'}')" class="aspect-square bg-editorbg rounded-xl border border-sand/50 overflow-hidden cursor-pointer hover:border-flame transition p-2 flex items-center justify-center"><img src="${d.imageURL}" class="max-w-full max-h-full object-contain pointer-events-none"></button>`).join('') + `</div>`
           : `<p class="text-xs font-bold text-slate text-center mt-4">Decoration items added by admin will appear here.</p>`;
       }
+
+      window.updateElementsTabsVisibility();
     }
 
     window.updateCartItemQuantity = async (id, delta) => {
