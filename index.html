@@ -2325,7 +2325,7 @@
                     class="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">Required</span>
                 </span>
               </h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                   <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-1 block">Frame Name</label>
                   <input type="text" id="product-outer-name" placeholder="Outer Frame Name"
@@ -2345,6 +2345,12 @@
                   <input type="number" id="product-outer-thickness" step="0.01" placeholder="Thickness in cm"
                     class="w-full px-3 py-2 bg-editorbg border border-sand rounded-xl text-xs font-semibold focus:border-flame focus:outline-none"
                     required>
+                </div>
+                <div class="flex items-center pb-2">
+                  <label class="flex items-center gap-2 text-xs font-bold text-charcoal cursor-pointer select-none">
+                    <input type="checkbox" id="product-outer-dynamic-thickness" class="accent-flame w-4 h-4 rounded">
+                    <span>Dynamic Thickness</span>
+                  </label>
                 </div>
               </div>
 
@@ -2452,7 +2458,7 @@
               </div>
 
               <!-- Inputs -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                   <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-1 block">Frame Name</label>
                   <input type="text" id="product-middle-name" placeholder="Middle Frame Name"
@@ -2469,6 +2475,12 @@
                     (cm)</label>
                   <input type="number" id="product-middle-thickness" step="0.01" placeholder="Thickness in cm"
                     class="w-full px-3 py-2 bg-editorbg border border-sand rounded-xl text-xs font-semibold focus:border-flame focus:outline-none">
+                </div>
+                <div class="flex items-center pb-2">
+                  <label class="flex items-center gap-2 text-xs font-bold text-charcoal cursor-pointer select-none">
+                    <input type="checkbox" id="product-middle-dynamic-thickness" class="accent-flame w-4 h-4 rounded">
+                    <span>Dynamic Thickness</span>
+                  </label>
                 </div>
               </div>
 
@@ -2576,7 +2588,7 @@
               </div>
 
               <!-- Inputs -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                   <label class="text-[10px] font-bold uppercase tracking-wider text-slate mb-1 block">Frame Name</label>
                   <input type="text" id="product-inner-name" placeholder="Inner Frame Name"
@@ -2593,6 +2605,12 @@
                     (cm)</label>
                   <input type="number" id="product-inner-thickness" step="0.01" placeholder="Thickness in cm"
                     class="w-full px-3 py-2 bg-editorbg border border-sand rounded-xl text-xs font-semibold focus:border-flame focus:outline-none">
+                </div>
+                <div class="flex items-center pb-2">
+                  <label class="flex items-center gap-2 text-xs font-bold text-charcoal cursor-pointer select-none">
+                    <input type="checkbox" id="product-inner-dynamic-thickness" class="accent-flame w-4 h-4 rounded">
+                    <span>Dynamic Thickness</span>
+                  </label>
                 </div>
               </div>
 
@@ -4901,7 +4919,31 @@
         </div>
       </div>
     </section>
+    <!-- ================= PRODUCTS BROWSER SECTION ================= -->
+    <section id="products-browse-section" class="hidden py-10 bg-surface min-h-[80vh]">
+      <div class="max-w-[1280px] mx-auto px-4 md:px-8">
+        <!-- Breadcrumb Bar -->
+        <nav class="flex items-center gap-2 text-xs text-gray-500 mb-8 font-sans">
+          <a href="/" onclick="event.preventDefault(); window.handlePathRouting('/')"
+            class="hover:text-black transition">Home</a>
+          <span>&rsaquo;</span>
+          <span id="pb-breadcrumb-title" class="font-bold text-gray-900">All Products</span>
+        </nav>
 
+        <div class="flex justify-between items-end mb-8 border-b border-outline-variant/30 pb-6">
+          <div>
+            <h1 id="pb-heading" class="text-4xl md:text-5xl font-headline-lg text-primary mb-2"
+              style="font-family: 'Playfair Display', serif;">All Products</h1>
+            <p class="text-on-surface-variant max-w-xl text-sm font-medium">Explore our complete collection of artisan
+              frames.</p>
+          </div>
+        </div>
+
+        <div id="pb-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-gutter">
+          <!-- Populated Dynamically by JS -->
+        </div>
+      </div>
+    </section>
     <!-- ================= DEDICATED PRODUCT DETAIL SECTION ================= -->
     <section id="product-detail-view" class="hidden py-10 bg-white min-h-[80vh]">
       <div class="max-w-[1280px] mx-auto px-4 md:px-8">
@@ -6332,6 +6374,9 @@
         document.getElementById(`product-${frameType}-name`).value = '';
         document.getElementById(`product-${frameType}-price`).value = '';
         document.getElementById(`product-${frameType}-thickness`).value = '';
+        if (document.getElementById(`product-${frameType}-dynamic-thickness`)) {
+          document.getElementById(`product-${frameType}-dynamic-thickness`).checked = false;
+        }
         document.getElementById(`product-${frameType}-url`).value = '';
         const imgInput = document.getElementById(`product-${frameType}-img`);
         if (imgInput) imgInput.value = '';
@@ -6491,17 +6536,20 @@
           image: product.outerFrame.image || product.frameImage || '',
           price: (product.outerFrame.price != null && product.outerFrame.price !== "") ? parseFloat(product.outerFrame.price) : (parseFloat(product.price) || 0),
           colors: Array.isArray(product.outerFrame.colors) ? product.outerFrame.colors : colours,
-          thickness: (product.outerFrame.thickness != null && product.outerFrame.thickness !== "") ? parseFloat(product.outerFrame.thickness) : 2.0
+          thickness: (product.outerFrame.thickness != null && product.outerFrame.thickness !== "") ? parseFloat(product.outerFrame.thickness) : 2.0,
+          dynamicThickness: Boolean(product.outerFrame.dynamicThickness ?? isDynamicThickness)
         };
         middleFrame = product.middleFrame ? {
           ...product.middleFrame,
           price: (product.middleFrame.price != null && product.middleFrame.price !== "") ? parseFloat(product.middleFrame.price) : 0,
-          thickness: (product.middleFrame.thickness != null && product.middleFrame.thickness !== "") ? parseFloat(product.middleFrame.thickness) : 2.0
+          thickness: (product.middleFrame.thickness != null && product.middleFrame.thickness !== "") ? parseFloat(product.middleFrame.thickness) : 2.0,
+          dynamicThickness: Boolean(product.middleFrame.dynamicThickness)
         } : null;
         innerFrame = product.innerFrame ? {
           ...product.innerFrame,
           price: (product.innerFrame.price != null && product.innerFrame.price !== "") ? parseFloat(product.innerFrame.price) : 0,
-          thickness: (product.innerFrame.thickness != null && product.innerFrame.thickness !== "") ? parseFloat(product.innerFrame.thickness) : 2.0
+          thickness: (product.innerFrame.thickness != null && product.innerFrame.thickness !== "") ? parseFloat(product.innerFrame.thickness) : 2.0,
+          dynamicThickness: Boolean(product.innerFrame.dynamicThickness)
         } : null;
       } else {
         outerFrame = {
@@ -6509,7 +6557,8 @@
           image: product.frameImage || '',
           price: parseFloat(product.price) || 0,
           colors: colours,
-          thickness: 2.0
+          thickness: 2.0,
+          dynamicThickness: isDynamicThickness
         };
         middleFrame = null;
         innerFrame = null;
@@ -7103,13 +7152,13 @@
       }
 
       container.innerHTML = globalCategories.map(c => `
-        <div class="flex-shrink-0 w-[280px] aspect-[3/4] relative group/item cursor-pointer snap-start rounded overflow-hidden" onclick="window.handlePathRouting('/products')">
+        <div class="flex-shrink-0 w-[280px] aspect-[3/4] relative group/item cursor-pointer snap-start rounded overflow-hidden" onclick="window.handlePathRouting('/category/${c.id}')">
           <img class="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110" src="${c.imageURL || 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400'}" alt="${c.name}">
           <div class="absolute inset-0 bg-primary/0 group-hover/item:bg-primary/80 transition-all duration-500 flex flex-col justify-end p-8">
             <div class="opacity-0 group-hover/item:opacity-100 transform translate-y-4 group-hover/item:translate-y-0 transition-all duration-500">
               <h4 class="text-on-primary font-headline-md text-2xl mb-2">${c.name}</h4>
               <p class="text-on-primary/80 text-label-sm mb-6">${c.desc || 'Explore our exclusive collection.'}</p>
-              <button class="bg-on-primary text-primary px-4 py-2 text-label-sm font-label-sm rounded font-bold">View Products</button>
+              <button onclick="event.stopPropagation(); window.handlePathRouting('/category/${c.id}')" class="bg-on-primary text-primary px-4 py-2 text-label-sm font-label-sm rounded font-bold hover:bg-secondary hover:text-on-primary transition-colors z-10 relative">View Products</button>
             </div>
           </div>
         </div>
@@ -7895,6 +7944,11 @@
       // Reset image previews and file text labels
       ['bg', 'outer', 'middle', 'inner'].forEach(type => window.clearImagePreview(type));
 
+      // Reset dynamic thickness checkboxes
+      if (document.getElementById('product-outer-dynamic-thickness')) document.getElementById('product-outer-dynamic-thickness').checked = false;
+      if (document.getElementById('product-middle-dynamic-thickness')) document.getElementById('product-middle-dynamic-thickness').checked = false;
+      if (document.getElementById('product-inner-dynamic-thickness')) document.getElementById('product-inner-dynamic-thickness').checked = false;
+
       // Collapse optional frame sections by default
       window.toggleFrameSection('middle', false);
       window.toggleFrameSection('inner', false);
@@ -8068,6 +8122,7 @@
               const nameVal = document.getElementById(`product-${frameType}-name`)?.value.trim() || '';
               const priceVal = document.getElementById(`product-${frameType}-price`)?.value.trim() || '';
               const thicknessVal = document.getElementById(`product-${frameType}-thickness`)?.value.trim() || '';
+              const dynamicThickness = document.getElementById(`product-${frameType}-dynamic-thickness`)?.checked || false;
               const file = document.getElementById(`product-${frameType}-img`)?.files[0] || null;
               const url = document.getElementById(`product-${frameType}-url`)?.value.trim() || '';
               const colors = readFrameColours(frameType);
@@ -8076,6 +8131,7 @@
                 name: nameVal,
                 price: priceVal !== '' ? parseFloat(priceVal) : NaN,
                 thickness: thicknessVal !== '' ? parseFloat(thicknessVal) : NaN,
+                dynamicThickness,
                 file,
                 url,
                 colors
@@ -8146,6 +8202,7 @@
                 image: middleImg,
                 price: middle.price,
                 thickness: middle.thickness,
+                dynamicThickness: middle.dynamicThickness,
                 colors: middle.colors
               };
             }
@@ -8160,6 +8217,7 @@
                 image: innerImg,
                 price: inner.price,
                 thickness: inner.thickness,
+                dynamicThickness: inner.dynamicThickness,
                 colors: inner.colors
               };
             }
@@ -8204,7 +8262,8 @@
                 image: outerImg,
                 price: outer.price,
                 colors: outer.colors,
-                thickness: outer.thickness
+                thickness: outer.thickness,
+                dynamicThickness: outer.dynamicThickness
               },
               middleFrame: middleFramePayload,
               innerFrame: innerFramePayload,
@@ -8466,18 +8525,27 @@
       document.getElementById('product-outer-name').value = product.outerFrame?.name || product.name || '';
       document.getElementById('product-outer-price').value = typeof product.outerFrame?.price === 'number' ? product.outerFrame.price : (product.price || 0);
       document.getElementById('product-outer-thickness').value = product.outerFrame?.thickness || 2.0;
+      if (document.getElementById('product-outer-dynamic-thickness')) {
+        document.getElementById('product-outer-dynamic-thickness').checked = Boolean(product.outerFrame?.dynamicThickness || product.dynamicThickness);
+      }
       document.getElementById('product-outer-url').value = product.outerFrame?.image || product.frameImage || '';
 
       // Populate Middle Frame (Optional)
       document.getElementById('product-middle-name').value = product.middleFrame?.name || '';
       document.getElementById('product-middle-price').value = typeof product.middleFrame?.price === 'number' ? product.middleFrame.price : '';
       document.getElementById('product-middle-thickness').value = product.middleFrame?.thickness || '';
+      if (document.getElementById('product-middle-dynamic-thickness')) {
+        document.getElementById('product-middle-dynamic-thickness').checked = Boolean(product.middleFrame?.dynamicThickness);
+      }
       document.getElementById('product-middle-url').value = product.middleFrame?.image || '';
 
       // Populate Inner Frame (Optional)
       document.getElementById('product-inner-name').value = product.innerFrame?.name || '';
       document.getElementById('product-inner-price').value = typeof product.innerFrame?.price === 'number' ? product.innerFrame.price : '';
       document.getElementById('product-inner-thickness').value = product.innerFrame?.thickness || '';
+      if (document.getElementById('product-inner-dynamic-thickness')) {
+        document.getElementById('product-inner-dynamic-thickness').checked = Boolean(product.innerFrame?.dynamicThickness);
+      }
       document.getElementById('product-inner-url').value = product.innerFrame?.image || '';
 
       if (document.getElementById('product-bg-url')) document.getElementById('product-bg-url').value = product.bgImage || '';
@@ -9624,23 +9692,27 @@
         layerLabel.textContent = niceName;
       }
 
-      // Fetch colors for the selected layer
+      // Fetch colors and dynamic thickness flag for the selected layer
       let layerColors = [];
       let currentLayerColor = null;
       let layerThickness = 100;
+      let isLayerDynamicThickness = false;
 
       if (role === 'frame') {
         layerColors = window.activeFrameProduct?.outerFrame?.colors || window.activeFrameProduct?.outerFrame?.colours || config.colours || defaultFrameColours;
         currentLayerColor = config.outerColour || config.colour;
         layerThickness = config.thickness || 100;
+        isLayerDynamicThickness = Boolean(window.activeFrameProduct?.outerFrame?.dynamicThickness ?? config.dynamicThickness);
       } else if (role === 'middle-frame') {
         layerColors = window.activeFrameProduct?.middleFrame?.colors || window.activeFrameProduct?.middleFrame?.colours || [];
         currentLayerColor = config.middleColour;
         layerThickness = config.middleThickness || 100;
+        isLayerDynamicThickness = Boolean(window.activeFrameProduct?.middleFrame?.dynamicThickness);
       } else if (role === 'inner-frame') {
         layerColors = window.activeFrameProduct?.innerFrame?.colors || window.activeFrameProduct?.innerFrame?.colours || [];
         currentLayerColor = config.innerColour;
         layerThickness = config.innerThickness || 100;
+        isLayerDynamicThickness = Boolean(window.activeFrameProduct?.innerFrame?.dynamicThickness);
       }
 
       const processedColours = [];
@@ -9669,7 +9741,7 @@
 
         const thicknessWrapper = document.getElementById('desktop-frame-thickness-wrapper');
         if (thicknessWrapper) {
-          if (config.dynamicThickness) {
+          if (isLayerDynamicThickness) {
             thicknessWrapper.classList.remove('hidden');
             document.getElementById('dt-thickness-slider').value = layerThickness;
             document.getElementById('dt-thickness-val').textContent = `${layerThickness}%`;
@@ -9691,7 +9763,7 @@
           `).join('');
         mobileHtml += `</div>`;
 
-        if (config.dynamicThickness) {
+        if (isLayerDynamicThickness) {
           mobileHtml += `
                  <div class="h-4 w-px bg-sand mx-1 shrink-0"></div>
                  <i data-lucide="move-horizontal" class="w-3 h-3 text-slate shrink-0"></i>
@@ -9731,7 +9803,7 @@
         // Thickness control
         const thicknessControl = document.getElementById('frame-thickness-control');
         if (thicknessControl) {
-          if (config.dynamicThickness) {
+          if (isLayerDynamicThickness) {
             thicknessControl.classList.remove('hidden');
             document.getElementById('frame-thickness-value').textContent = `${layerThickness}%`;
             document.getElementById('frame-thickness-slider').value = layerThickness;
@@ -10461,7 +10533,7 @@
         }
       });
 
-      const additionalSections = ['product-detail-view', 'faq-section', 'orders-tracking-section', 'user-profile-section', 'user-settings-section', 'dynamic-page-section', 'blog-index-section'];
+      const additionalSections = ['products-browse-section', 'product-detail-view', 'faq-section', 'orders-tracking-section', 'user-profile-section', 'user-settings-section', 'dynamic-page-section', 'blog-index-section'];
       additionalSections.forEach(id => {
         const el = document.getElementById(id);
         if (el && show) el.classList.add('hidden');
@@ -12122,7 +12194,11 @@
       }
       else if (cleanPath === "/products") {
         window.switchView('landing', false);
-        window.scrollToSection('frames-section');
+        window.showLandingContentSections(false);
+        const browseSec = document.getElementById('products-browse-section');
+        if (browseSec) browseSec.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        window.renderProductsPage(null); // Fetch and render ALL products
 
         window.updateSEOMetadata({
           title: "Premium Custom Picture Frames Collection | FrameCraft Studio",
@@ -12133,6 +12209,21 @@
           ]
         });
         renderVisualBreadcrumbs([{ name: 'Home', url: '/' }, { name: 'Products', url: '/products' }]);
+      }
+      else if (cleanPath.startsWith('/category/')) {
+        const catId = cleanPath.substring('/category/'.length);
+        window.switchView('landing', false);
+        window.showLandingContentSections(false);
+        const browseSec = document.getElementById('products-browse-section');
+        if (browseSec) browseSec.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        window.renderProductsPage(catId); // Fetch and render CATEGORY products
+
+        window.updateSEOMetadata({
+          title: "Category Products | FrameCraft Studio",
+          description: "Explore our curated category of premium artisan frames.",
+          path: cleanPath
+        });
       }
       else if (cleanPath === "/about-us") {
         window.switchView('landing', false);
@@ -17470,6 +17561,82 @@
         setTimeout(window.initScrollAnimations, 200);
       });
     })();
+    window.renderProductsPage = async (categoryId = null) => {
+      const grid = document.getElementById('pb-grid');
+      const heading = document.getElementById('pb-heading');
+      const breadcrumb = document.getElementById('pb-breadcrumb-title');
+
+      if (!grid) return;
+      grid.innerHTML = '<div class="col-span-full text-center py-10"><i data-lucide="loader" class="w-8 h-8 animate-spin mx-auto text-flame mb-2"></i></div>';
+      if (window.lucide) lucide.createIcons();
+
+      if (!productTemplates || productTemplates.length === 0) {
+        try { await loadProductTemplates(); } catch (e) { }
+      }
+      if (globalCategories.length === 0) {
+        try { await loadCategoriesData(); } catch (e) { }
+      }
+
+      let displayProducts = productTemplates;
+      let pageName = "All Products";
+
+      if (categoryId) {
+        displayProducts = productTemplates.filter(p => p.categoryId === categoryId);
+        const cat = globalCategories.find(c => c.id === categoryId);
+        if (cat) pageName = cat.name;
+      }
+
+      if (heading) heading.textContent = pageName;
+      if (breadcrumb) breadcrumb.textContent = pageName;
+
+      if (displayProducts.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 bg-white rounded-3xl border border-sand/50 shadow-sm mt-4"><i data-lucide="package-open" class="w-12 h-12 text-sand mx-auto mb-3"></i><p class="text-slate font-bold text-lg">No products found in this category.</p><button onclick="window.handlePathRouting('/products')" class="mt-4 px-6 py-2.5 bg-primary text-on-primary rounded-xl font-bold hover:bg-secondary transition shadow-sm">View All Products</button></div>`;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      grid.innerHTML = displayProducts.map((product, idx) => {
+        const hasSale = product.saleActive && product.salePrice != null;
+        const priceHtml = hasSale
+          ? `<span class="text-on-surface-variant line-through text-label-sm">${window.appCurrency || '$'}${product.price.toFixed(2)}</span>
+             <span class="text-primary font-bold text-lg">${window.appCurrency || '$'}${product.salePrice.toFixed(2)}</span>`
+          : `<span class="text-primary font-bold text-lg">${window.appCurrency || '$'}${product.price.toFixed(2)}</span>`;
+
+        const delay = (idx % 4) * 100;
+        const delayStyle = delay > 0 ? `style="transition-delay: ${delay}ms;"` : '';
+        const desc = product.description || "Precision-cut artisan frame crafted for a clean, natural look.";
+        const galleryImg = (Array.isArray(product.galleryImages) && product.galleryImages[0]) ||
+          (Array.isArray(product.images) && product.images[0]) ||
+          product.frameImage ||
+          'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400&h=400';
+
+        return `
+          <div class="reveal bg-surface-container-lowest p-4 group active border border-outline-variant/30 rounded-lg hover:shadow-xl transition-all duration-300" ${delayStyle}>
+            <div class="product-preview-container relative overflow-hidden mb-6 aspect-[4/5] bg-surface-container !p-0 !outline-none !border-none !rounded-none flex items-center justify-center cursor-pointer" onclick="window.handlePathRouting('/products/${slugify(product.name)}')">
+              <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="${galleryImg}" alt="${product.name}">
+              ${hasSale ? `<div class="absolute top-4 right-4 bg-on-primary px-3 py-1 text-label-sm font-label-sm shadow-sm z-10 text-primary font-bold">Sale</div>` : ''}
+              ${product.outOfStock ? `<div class="absolute top-4 left-4 bg-error text-on-primary px-3 py-1 text-label-sm font-label-sm shadow-sm z-10">Out of Stock</div>` : ''}
+            </div>
+            <div class="flex items-center gap-1 text-secondary-fixed-dim mb-2">
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+              <span class="text-on-surface-variant text-[12px] ml-1">(128)</span>
+            </div>
+            <h3 class="text-headline-md font-headline-md text-primary mb-2 text-xl cursor-pointer hover:text-secondary transition line-clamp-1" onclick="window.handlePathRouting('/products/${slugify(product.name)}')">${product.name}</h3>
+            <p class="text-on-surface-variant text-body-md mb-4 line-clamp-2">${desc}</p>
+            <div class="flex items-center gap-3 mb-6">
+              ${priceHtml}
+            </div>
+            <button onclick="window.handlePathRouting('/products/${slugify(product.name)}')" class="w-full py-3 bg-primary text-on-primary text-label-sm font-label-sm hover:bg-secondary transition-all rounded ${product.outOfStock ? 'opacity-50 cursor-not-allowed' : ''}" ${product.outOfStock ? 'disabled' : ''}>View Details</button>
+          </div>
+        `;
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+      if (window.initScrollAnimations) window.initScrollAnimations();
+    };
   </script>
 
 
