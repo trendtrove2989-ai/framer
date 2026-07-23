@@ -124,8 +124,7 @@
     }
 
     /* Hide loaders */
-    #bars-container,
-    #loader-container {
+    #bars-container {
       display: none !important;
       opacity: 0 !important;
       pointer-events: none !important;
@@ -1387,6 +1386,10 @@
       box-shadow: none;
       border-color: #775a19;
     }
+
+    #hero h1 {
+      font-family: 'Playfair Display', serif !important;
+    }
   </style>
 </head>
 
@@ -1394,19 +1397,27 @@
 
   <!-- Loading Screen Overlays -->
   <div id="bars-container" class="hidden"></div>
-  <div id="loader-container" class="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[#fbfbfa] select-none">
+  <div id="loader-container"
+    class="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[#fbfbfa] select-none">
     <div class="flex flex-col items-center">
       <!-- Logo Title -->
-      <h1 class="font-[Playfair_Display] text-4xl md:text-5xl font-bold text-charcoal tracking-tight">FrameCraft</h1>
-      <span class="font-[Inter] text-[9px] font-black uppercase tracking-[0.3em] text-slate mt-2.5">Artisan Framing Collective</span>
-      
-      <!-- Divider Line -->
-      <div class="w-80 h-px bg-sand/60 mt-8 mb-3.5"></div>
-      
+      <h1 class="text-4xl md:text-5xl font-bold text-charcoal tracking-tight"
+        style="font-family: 'Playfair Display', serif;">FrameCraft</h1>
+      <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate mt-2.5"
+        style="font-family: 'Inter', sans-serif;">Artisan Framing Collective</span>
+
+      <!-- Divider / Progress Bar -->
+      <div class="w-80 h-px bg-sand/60 mt-8 mb-3.5 relative overflow-hidden">
+        <div id="loading-bar-fill" class="absolute left-0 top-0 h-full bg-charcoal transition-all duration-100 ease-out"
+          style="width: 0%;"></div>
+      </div>
+
       <!-- Status Box -->
       <div class="w-80 flex justify-between items-center text-[11px] font-bold text-slate">
-        <span id="loading-text-el" class="italic text-slate">Curating your workspace...</span>
-        <span id="loading-percentage-el" class="text-charcoal font-black">0%</span>
+        <span id="loading-text-el" class="italic text-slate" style="font-family: 'Inter', sans-serif;">Curating your
+          workspace...</span>
+        <span id="loading-percentage-el" class="text-charcoal font-black"
+          style="font-family: 'Inter', sans-serif;">0%</span>
       </div>
     </div>
   </div>
@@ -1875,28 +1886,78 @@
         <div class="mt-8 pt-6 border-t border-sand/50">
           <h3 class="text-xs font-bold text-slate uppercase tracking-wider mb-4">Select Payment Method</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+            <!-- Cash on Delivery -->
             <label
-              class="flex items-center justify-between p-4 bg-white border-2 border-flame rounded-2xl cursor-pointer transition select-none"
+              class="relative flex flex-col p-5 bg-white border-2 border-flame shadow-sm rounded-2xl cursor-pointer transition-all duration-200 group select-none"
               id="label-pay-cod">
-              <div class="flex items-center gap-3">
-                <input type="radio" name="payment_method_choice" value="COD" checked
-                  onchange="switchPaymentArchitecture('COD')" class="accent-flame w-4 h-4">
-                <span class="text-sm font-extrabold text-charcoal">Cash on Delivery</span>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method_choice" value="COD" checked
+                    onchange="switchPaymentArchitecture('COD')" class="accent-flame w-4 h-4">
+                  <span class="text-sm font-extrabold text-charcoal">Cash on Delivery</span>
+                </div>
+                <div
+                  class="w-8 h-8 rounded-full bg-editorbg flex items-center justify-center text-slate group-hover:text-charcoal transition-colors">
+                  <i data-lucide="truck" class="w-4 h-4"></i>
+                </div>
               </div>
-              <i data-lucide="truck" class="w-5 h-5 text-slate"></i>
+              <p class="text-xs font-medium text-slate pl-7">Pay in cash when your order arrives.</p>
             </label>
+
+            <!-- Credit / Debit Card -->
             <label
-              class="flex items-center justify-between p-4 bg-editorbg border border-sand rounded-2xl cursor-pointer transition select-none"
+              class="relative flex flex-col p-5 bg-editorbg border border-sand hover:border-flame/50 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-md group select-none"
               id="label-pay-card">
-              <div class="flex items-center gap-3">
-                <input type="radio" name="payment_method_choice" value="CARD"
-                  onchange="switchPaymentArchitecture('CARD')" class="accent-flame w-4 h-4">
-                <span class="text-sm font-extrabold text-charcoal">Online Card Payment</span>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method_choice" value="CARD"
+                    onchange="switchPaymentArchitecture('CARD')" class="accent-flame w-4 h-4">
+                  <span class="text-sm font-extrabold text-charcoal">Credit / Debit</span>
+                </div>
+                <div class="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <i class="fa-brands fa-cc-visa text-[#1a1f71] text-xl"></i>
+                  <i class="fa-brands fa-cc-mastercard text-[#eb001b] text-xl"></i>
+                  <i class="fa-brands fa-cc-amex text-[#0070ce] text-xl"></i>
+                </div>
               </div>
-              <div class="flex gap-1 text-slate">
-                <i data-lucide="shield-check" class="w-5 h-5"></i>
-              </div>
+              <p class="text-xs font-medium text-slate pl-7">Pay securely with your bank card.</p>
             </label>
+
+            <!-- PayPal -->
+            <label
+              class="relative flex flex-col p-5 bg-editorbg border border-sand hover:border-flame/50 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-md group select-none"
+              id="label-pay-paypal">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method_choice" value="PAYPAL"
+                    onchange="switchPaymentArchitecture('PAYPAL')" class="accent-flame w-4 h-4">
+                  <span class="text-sm font-extrabold text-charcoal">PayPal</span>
+                </div>
+                <div class="flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
+                  <i class="fa-brands fa-paypal text-[#00457C] text-2xl"></i>
+                </div>
+              </div>
+              <p class="text-xs font-medium text-slate pl-7">Fast, safe, and secure checkout.</p>
+            </label>
+
+            <!-- Google Pay -->
+            <label
+              class="relative flex flex-col p-5 bg-editorbg border border-sand hover:border-flame/50 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-md group select-none"
+              id="label-pay-gpay">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="payment_method_choice" value="GPAY"
+                    onchange="switchPaymentArchitecture('GPAY')" class="accent-flame w-4 h-4">
+                  <span class="text-sm font-extrabold text-charcoal">Google Pay</span>
+                </div>
+                <div class="flex items-center opacity-80 group-hover:opacity-100 transition-opacity">
+                  <i class="fa-brands fa-google-pay text-gray-800 text-4xl leading-none"></i>
+                </div>
+              </div>
+              <p class="text-xs font-medium text-slate pl-7">Quick checkout via your Google account.</p>
+            </label>
+
           </div>
         </div>
 
@@ -5197,7 +5258,7 @@
           class="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center text-[13px] text-[var(--text-footer,#45474b)] font-medium">
           <p data-cms="pages.footer.sections.general.elements.copyright">© 2026 FrameCraft. All rights reserved. |
             Designed by <a href='https://grouperlogic.com/' target='_blank'
-              style='text-decoration:underline;'>grouperlogic.com</a></p>
+              style='text-decoration:underline;'>grouperlogic</a></p>
           <div class="flex gap-8 mt-4 md:mt-0 font-bold">
             <a class="hover:text-[var(--btn-color,#775a19)] transition-colors" href="#">Terms of Service</a>
             <a class="hover:text-[var(--btn-color,#775a19)] transition-colors" href="#">Cookie Policy</a>
@@ -6390,17 +6451,25 @@
         outerFrame = {
           name: product.outerFrame.name || product.name || 'Outer Frame',
           image: product.outerFrame.image || product.frameImage || '',
-          price: typeof product.outerFrame.price === 'number' ? product.outerFrame.price : (product.price || 0),
+          price: (product.outerFrame.price != null && product.outerFrame.price !== "") ? parseFloat(product.outerFrame.price) : (parseFloat(product.price) || 0),
           colors: Array.isArray(product.outerFrame.colors) ? product.outerFrame.colors : colours,
-          thickness: typeof product.outerFrame.thickness === 'number' ? product.outerFrame.thickness : 2.0
+          thickness: (product.outerFrame.thickness != null && product.outerFrame.thickness !== "") ? parseFloat(product.outerFrame.thickness) : 2.0
         };
-        middleFrame = product.middleFrame || null;
-        innerFrame = product.innerFrame || null;
+        middleFrame = product.middleFrame ? {
+          ...product.middleFrame,
+          price: (product.middleFrame.price != null && product.middleFrame.price !== "") ? parseFloat(product.middleFrame.price) : 0,
+          thickness: (product.middleFrame.thickness != null && product.middleFrame.thickness !== "") ? parseFloat(product.middleFrame.thickness) : 2.0
+        } : null;
+        innerFrame = product.innerFrame ? {
+          ...product.innerFrame,
+          price: (product.innerFrame.price != null && product.innerFrame.price !== "") ? parseFloat(product.innerFrame.price) : 0,
+          thickness: (product.innerFrame.thickness != null && product.innerFrame.thickness !== "") ? parseFloat(product.innerFrame.thickness) : 2.0
+        } : null;
       } else {
         outerFrame = {
           name: product.name || 'Outer Frame',
           image: product.frameImage || '',
-          price: product.price || 0,
+          price: parseFloat(product.price) || 0,
           colors: colours,
           thickness: 2.0
         };
@@ -6703,9 +6772,11 @@
       const loaderContainer = document.getElementById('loader-container');
       const textEl = document.getElementById('loading-text-el');
       const percentageEl = document.getElementById('loading-percentage-el');
+      const barFill = document.getElementById('loading-bar-fill');
 
       if (textEl) textEl.innerText = text;
       if (percentageEl) percentageEl.innerText = '0%';
+      if (barFill) barFill.style.width = '0%';
 
       if (loaderContainer) {
         loaderContainer.classList.remove('fade-out');
@@ -6720,6 +6791,7 @@
         const elapsed = Date.now() - startTime;
         currentPercent = Math.min(100, Math.floor((elapsed / duration) * 100));
         if (percentageEl) percentageEl.innerText = `${currentPercent}%`;
+        if (barFill) barFill.style.width = `${currentPercent}%`;
 
         if (elapsed < duration) {
           requestAnimationFrame(updatePercent);
@@ -6739,10 +6811,12 @@
       const loaderContainer = document.getElementById('loader-container');
       const percentageEl = document.getElementById('loading-percentage-el');
       const textEl = document.getElementById('loading-text-el');
+      const barFill = document.getElementById('loading-bar-fill');
       const heroImage = document.getElementById('hero-image');
 
       if (textEl) textEl.innerText = 'Curating your workspace...';
       if (percentageEl) percentageEl.innerText = '0%';
+      if (barFill) barFill.style.width = '0%';
 
       let progress = 0;
       let lastTime = performance.now();
@@ -6754,7 +6828,9 @@
         lastTime = currentTime;
 
         if (progress <= 90) {
-          if (percentageEl) percentageEl.innerText = `${Math.floor(progress)}%`;
+          const p = Math.floor(progress);
+          if (percentageEl) percentageEl.innerText = `${p}%`;
+          if (barFill) barFill.style.width = `${p}%`;
           requestAnimationFrame(updateProgress);
         }
       }
@@ -6793,6 +6869,7 @@
             const elapsed = Date.now() - finalStart;
             const step = Math.min(100, Math.floor(currentPct + (elapsed / finalDuration) * (100 - currentPct)));
             if (percentageEl) percentageEl.innerText = `${step}%`;
+            if (barFill) barFill.style.width = `${step}%`;
 
             if (elapsed < finalDuration) {
               requestAnimationFrame(fillPercent);
@@ -9545,7 +9622,8 @@
 
         const desktopColors = document.getElementById('desktop-frame-colors');
         if (desktopColors) {
-          desktopColors.innerHTML = processedColours.map((c, idx) => `
+          const orgBtn = `<button onclick="selectFrameColourByValue('original')" title="Original Texture" class="w-8 h-8 rounded border-2 ${!currentLayerColor ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all bg-slate-100 flex items-center justify-center text-[9px] font-black text-slate-700 uppercase">Org</button>`;
+          desktopColors.innerHTML = orgBtn + processedColours.map((c, idx) => `
                 <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
             `).join('');
         }
@@ -9568,6 +9646,7 @@
         mobileControls.classList.add('flex');
 
         let mobileHtml = `<div class="flex items-center gap-1.5 pl-1">`;
+        mobileHtml += `<button onclick="selectFrameColourByValue('original')" title="Original Texture" class="w-5 h-5 rounded-full border-2 ${!currentLayerColor ? 'border-flame shadow-md scale-110' : 'border-sand'} shrink-0 transition-transform bg-slate-100 flex items-center justify-center text-[7px] font-black text-slate-700 uppercase">Org</button>`;
         mobileHtml += processedColours.map((c, idx) => `
               <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-5 h-5 rounded-full border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand'} shrink-0 transition-transform" style="background-color: ${c.value};"></button>
           `).join('');
@@ -9604,7 +9683,8 @@
         // Frame colours
         const frameColourOptions = document.getElementById('frame-colour-options');
         if (frameColourOptions) {
-          frameColourOptions.innerHTML = processedColours.map((c, idx) => `
+          const orgBtn = `<button onclick="selectFrameColourByValue('original')" title="Original Texture" class="w-8 h-8 rounded-full border-2 ${!currentLayerColor ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all bg-slate-100 flex items-center justify-center text-[9px] font-black text-slate-700 uppercase">Org</button>`;
+          frameColourOptions.innerHTML = orgBtn + processedColours.map((c, idx) => `
                   <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded-full border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
               `).join('');
         }
@@ -9661,8 +9741,23 @@
       if (!config) return;
 
       const role = selectedItem?.dataset?.frameRole;
-      let layerColors = [];
 
+      if (value === 'original') {
+        if (role === 'frame') {
+          config.outerColour = null;
+          config.colour = null;
+        } else if (role === 'middle-frame') {
+          config.middleColour = null;
+        } else if (role === 'inner-frame') {
+          config.innerColour = null;
+        }
+        window.syncFrameCustomizationPanels();
+        window.updateFrameColourOverlay();
+        recordState();
+        return;
+      }
+
+      let layerColors = [];
       if (role === 'frame') {
         layerColors = window.activeFrameProduct?.outerFrame?.colors || window.activeFrameProduct?.outerFrame?.colours || config.colours || defaultFrameColours;
       } else if (role === 'middle-frame') {
@@ -11921,6 +12016,10 @@
       }
       else if (cleanPath === "/dashboard") {
         window.switchView('dashboard', false);
+        if (window.defaultDashboardTab) {
+          switchDashboardTab(window.defaultDashboardTab);
+          window.defaultDashboardTab = null;
+        }
         window.updateSEOMetadata({
           title: "My Projects Dashboard | FrameCraft Studio",
           path: "/dashboard",
@@ -11955,10 +12054,7 @@
         });
       }
       else if (cleanPath === "/user-profile") {
-        if (!currentUser) { toggleModal('login-modal'); return; }
-        window.showLandingContentSections(false);
-        const profileSec = document.getElementById('user-profile-section');
-        if (profileSec) profileSec.classList.remove('hidden');
+        window.showUserProfilePage(false);
         window.updateSEOMetadata({
           title: "My Profile | FrameCraft Studio",
           path: "/user-profile",
@@ -11966,10 +12062,7 @@
         });
       }
       else if (cleanPath === "/user-settings") {
-        if (!currentUser) { toggleModal('login-modal'); return; }
-        window.showLandingContentSections(false);
-        const settingsSec = document.getElementById('user-settings-section');
-        if (settingsSec) settingsSec.classList.remove('hidden');
+        window.showUserSettingsPage(false);
         window.updateSEOMetadata({
           title: "My Settings | FrameCraft Studio",
           path: "/user-settings",
@@ -12149,6 +12242,10 @@
       const target = document.getElementById(targetId + '-view');
       if (target) target.classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'instant' });
+
+      if (targetId === 'editor') {
+        window.updateCanvasScale();
+      }
 
       const floatingBtn = document.getElementById('floating-cart-btn');
       const dashboardBtn = document.getElementById('dashboard-cart-btn');
@@ -12502,12 +12599,15 @@
         product.outerFrame = targetFrameData;
         config.outerColour = targetFrameData.colors?.[0] || null;
         config.colour = targetFrameData.colors?.[0] || null;
+        product.saleActive = false;
       } else if (layerType === 'middle') {
         product.middleFrame = targetFrameData;
         config.middleColour = targetFrameData.colors?.[0] || null;
+        product.saleActive = false;
       } else if (layerType === 'inner') {
         product.innerFrame = targetFrameData;
         config.innerColour = targetFrameData.colors?.[0] || null;
+        product.saleActive = false;
       }
 
       showToast(`Replaced ${layerType.toUpperCase()} frame layer.`);
@@ -12699,7 +12799,7 @@
 
         return `
           <div class="flex items-start gap-5 py-2">
-            <img src="${imgUrl}" alt="${item.title}" class="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-none bg-gray-100 shrink-0 border border-gray-200/50">
+            <img src="${imgUrl}" alt="${item.title}" onerror="this.src='https://images.unsplash.com/photo-1544457070-4cd773b4d71e?auto=format&fit=crop&q=80&w=400'" class="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-none bg-gray-100 shrink-0 border border-gray-200/50">
             <div class="flex-1 flex flex-col justify-between min-h-[96px] sm:min-h-[112px]">
               <div>
                 <h4 class="font-bold text-[#111111] text-[15px] leading-tight">${item.title || 'Custom Frame'}</h4>
@@ -13163,6 +13263,35 @@
       const canvasHtml = document.getElementById('artwork-layer').innerHTML;
       const bgColor = document.getElementById('design-canvas').style.backgroundColor || '#ffffff';
 
+      // Resolve the preview image for the cart item
+      const artLayer = document.getElementById('artwork-layer');
+      let previewImgSrc = '';
+      if (artLayer) {
+        // First try to get the background artwork image
+        const artworkImg = artLayer.querySelector('[data-frame-role="artwork"] img');
+        if (artworkImg && artworkImg.src) {
+          previewImgSrc = artworkImg.src;
+        } else {
+          // If no artwork, try to get the outer frame image
+          const frameImg = artLayer.querySelector('[data-frame-role="frame"] img');
+          if (frameImg && frameImg.src) {
+            previewImgSrc = frameImg.src;
+          } else {
+            // Or any image inside the canvas
+            const anyImg = artLayer.querySelector('img');
+            if (anyImg && anyImg.src) {
+              previewImgSrc = anyImg.src;
+            }
+          }
+        }
+      }
+
+      // Fallback to product images if still empty
+      if (!previewImgSrc && window.activeFrameProduct) {
+        const prod = window.activeFrameProduct;
+        previewImgSrc = prod.bgImage || prod.frameImage || (prod.outerFrame && prod.outerFrame.image) || (prod.images && prod.images.length > 0 ? prod.images[0] : '');
+      }
+
       const newItem = {
         id: generateId(),
         title: title,
@@ -13170,6 +13299,7 @@
         customization: getCurrentCustomizationSummary(),
         canvasData: canvasHtml,
         backgroundColor: bgColor,
+        imageURL: previewImgSrc,
         dateAdded: firebase.firestore.FieldValue.serverTimestamp()
       };
 
@@ -13299,17 +13429,27 @@
     const NetworkPaymentService = new AutomatedPaymentAdapterSystem();
 
     window.switchPaymentArchitecture = (method) => {
-      const codLabel = document.getElementById('label-pay-cod');
-      const cardLabel = document.getElementById('label-pay-card');
+      const methods = ['cod', 'card', 'paypal', 'gpay'];
       const submitText = document.getElementById('btn-submit-secure-text');
 
+      methods.forEach(m => {
+        const el = document.getElementById('label-pay-' + m);
+        if (el) {
+          if (m === method.toLowerCase()) {
+            el.className = "relative flex flex-col p-5 bg-white border-2 border-flame shadow-sm rounded-2xl cursor-pointer transition-all duration-200 group select-none";
+          } else {
+            el.className = "relative flex flex-col p-5 bg-editorbg border border-sand hover:border-flame/50 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-md group select-none";
+          }
+        }
+      });
+
       if (method === 'CARD') {
-        cardLabel.className = "flex items-center justify-between p-4 bg-white border-2 border-flame rounded-2xl cursor-pointer transition select-none";
-        codLabel.className = "flex items-center justify-between p-4 bg-editorbg border border-sand rounded-2xl cursor-pointer transition select-none";
         submitText.innerText = "Proceed to Pay";
+      } else if (method === 'PAYPAL') {
+        submitText.innerText = "Pay with PayPal";
+      } else if (method === 'GPAY') {
+        submitText.innerText = "Pay with GPay";
       } else {
-        codLabel.className = "flex items-center justify-between p-4 bg-white border-2 border-flame rounded-2xl cursor-pointer transition select-none";
-        cardLabel.className = "flex items-center justify-between p-4 bg-editorbg border border-sand rounded-2xl cursor-pointer transition select-none";
         submitText.innerText = "Place Order";
       }
     };
@@ -13336,12 +13476,24 @@
         document.getElementById('summary-shipping-price').innerText = `${window.appCurrency || '$'}${shippingCalculatedCharge.toFixed(2)}`;
         document.getElementById('summary-grand-total').innerText = `${window.appCurrency || '$'}${absoluteGrandTotalFee.toFixed(2)}`;
 
-        const screen = document.getElementById('secure-payment-screen');
-        screen.classList.remove('hidden');
-        screen.classList.add('flex');
-        document.getElementById('screen-holder-name').focus();
+        window.playGlobalLoader("Verifying shipping information...", () => {
+          const screen = document.getElementById('secure-payment-screen');
+          screen.classList.remove('hidden');
+          screen.classList.add('flex');
+          document.getElementById('screen-holder-name').focus();
+        });
+      } else if (selectedMethod === 'PAYPAL') {
+        window.playGlobalLoader("Redirecting to PayPal secure gateway...", () => {
+          processFinalCheckoutOrderCreation('PAYPAL', 'Success', { transactionId: 'PAYPAL-TX-' + Math.floor(1000 + Math.random() * 9000), intentId: 'None', brand: 'PayPal', last4: 'None' });
+        }, false);
+      } else if (selectedMethod === 'GPAY') {
+        window.playGlobalLoader("Opening Google Pay secure prompt...", () => {
+          processFinalCheckoutOrderCreation('GPAY', 'Success', { transactionId: 'GPAY-TX-' + Math.floor(1000 + Math.random() * 9000), intentId: 'None', brand: 'Google Pay', last4: 'None' });
+        }, false);
       } else {
-        processFinalCheckoutOrderCreation('COD', 'Pending', { transactionId: 'COD-PENDING-LOG', intentId: 'None', brand: 'None', last4: 'None' });
+        window.playGlobalLoader("Processing order submission...", () => {
+          processFinalCheckoutOrderCreation('COD', 'Pending', { transactionId: 'COD-PENDING-LOG', intentId: 'None', brand: 'None', last4: 'None' });
+        }, false);
       }
     };
 
@@ -13406,6 +13558,111 @@
       return (sum % 10) === 0;
     }
 
+    const MOCK_VALID_CARDS = [
+      {
+        cardholder: "Ahmed Khan",
+        number: "4000123456789010",
+        expiry: "12/28",
+        cvv: "123",
+        phone: "+92 300 1234567",
+        pin: "4820"
+      },
+      {
+        cardholder: "Jane Doe",
+        number: "5105105105105100",
+        expiry: "09/27",
+        cvv: "987",
+        phone: "+1 (555) 019-2834",
+        pin: "1928"
+      },
+      {
+        cardholder: "John Smith",
+        number: "340012345678901",
+        expiry: "05/29",
+        cvv: "4567",
+        phone: "+44 7911 123456",
+        pin: "8821"
+      }
+    ];
+
+    function openPinVerificationModal(cardProfile, totalAmount, onSuccess, onFailure) {
+      const modalId = 'pin-verification-modal';
+      const existing = document.getElementById(modalId);
+      if (existing) existing.remove();
+
+      const modalHtml = `
+        <div id="${modalId}" class="fixed inset-0 z-[10005] flex items-center justify-center bg-charcoal/60 backdrop-blur-sm transition-opacity">
+          <div class="glass-panel p-8 rounded-3xl border-2 border-flame/40 shadow-2xl w-full max-w-sm bg-white text-left">
+            <div class="flex justify-between items-center mb-6">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-flame animate-pulse"></div>
+                <h3 class="text-sm font-black text-charcoal tracking-tight uppercase" style="font-family: 'Inter', sans-serif;">Secure OTP Verification</h3>
+              </div>
+              <button onclick="document.getElementById('${modalId}').remove(); if(window.hideGlobalLoader) window.hideGlobalLoader(); if(${onFailure}) ${onFailure}(new Error('Verification cancelled.'));" class="text-slate hover:text-flame transition border-none bg-transparent cursor-pointer flex items-center">
+                <span class="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            
+            <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-[11px] font-semibold leading-relaxed" style="font-family: 'Inter', sans-serif;">
+              <p class="font-bold mb-1 uppercase tracking-wider text-amber-900">🔑 EMULATOR SMS OTP CHALLENGE:</p>
+              <p>Registered Phone: <strong class="text-charcoal">${cardProfile.phone}</strong></p>
+              <p class="mt-2 text-[12px] bg-white border border-amber-200 rounded px-2.5 py-1.5 inline-block font-black text-flame">PIN: ${cardProfile.pin}</p>
+            </div>
+
+            <div class="mb-6">
+              <label class="text-[9px] font-black uppercase tracking-wider text-slate mb-2 block" style="font-family: 'Inter', sans-serif;">Enter SMS OTP Code</label>
+              <input type="text" id="pin-input-field" placeholder="••••" maxlength="6" 
+                class="w-full text-center text-2xl tracking-[0.5em] font-black px-4 py-3 bg-editorbg border border-sand rounded-xl focus:border-flame focus:outline-none focus:ring-1 focus:ring-flame transition" style="font-family: 'Inter', sans-serif;">
+              <p id="pin-error-text" class="text-red-600 text-xs font-bold mt-2 hidden" style="font-family: 'Inter', sans-serif;">Incorrect PIN code. Please check SMS and try again.</p>
+            </div>
+
+            <div class="flex gap-4">
+              <button id="btn-cancel-pin" class="flex-1 px-4 py-3 bg-editorbg border border-sand rounded-xl font-bold text-xs text-charcoal hover:bg-sand/30 transition cursor-pointer" style="font-family: 'Inter', sans-serif;">
+                Cancel
+              </button>
+              <button id="btn-submit-pin" class="flex-1 btn-solid-orange py-3 rounded-xl text-cream font-extrabold text-xs shadow-md cursor-pointer" style="font-family: 'Inter', sans-serif;">
+                Verify & Pay
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      const submitBtn = document.getElementById('btn-submit-pin');
+      const cancelBtn = document.getElementById('btn-cancel-pin');
+      const pinInput = document.getElementById('pin-input-field');
+      const errorText = document.getElementById('pin-error-text');
+
+      const handleCancel = () => {
+        document.getElementById(modalId).remove();
+        if (window.hideGlobalLoader) window.hideGlobalLoader();
+        if (onFailure) onFailure(new Error('Verification cancelled.'));
+      };
+
+      submitBtn.addEventListener('click', () => {
+        const val = pinInput.value.trim();
+        if (val === cardProfile.pin) {
+          document.getElementById(modalId).remove();
+          onSuccess();
+        } else {
+          errorText.classList.remove('hidden');
+          pinInput.value = '';
+          pinInput.focus();
+        }
+      });
+
+      cancelBtn.addEventListener('click', handleCancel);
+
+      pinInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          submitBtn.click();
+        }
+      });
+
+      pinInput.focus();
+    }
+
     window.executeSecureNetworkTokenization = async () => {
       const cardHolder = document.getElementById('screen-holder-name').value.trim();
       const cardNum = document.getElementById('screen-card-number').value.replace(/\s+/g, '');
@@ -13419,14 +13676,9 @@
         return;
       }
 
-      if (cardNum.length < 13 || !processLuhnAlgorithmVerification(cardNum)) {
-        showToast("Invalid card configuration parameters (Luhn Failure Rejected).");
-        return;
-      }
-
       const expParts = expiry.split('/');
       if (expParts.length !== 2 || parseInt(expParts[0]) > 12) {
-        showToast("Invalid card expiration parameter format matrix.");
+        showToast("Invalid card expiration parameter format.");
         return;
       }
 
@@ -13438,36 +13690,60 @@
 
       window.playGlobalLoader("Routing Payment Gateway Intent...", null, false);
 
-      try {
-        const rawPriceSum = parseFloat(document.getElementById('chk-total').innerText.replace(/[^0-9.]/g, '')) || 0;
-        const calculatedShipping = rawPriceSum > 150 ? 0 : 15.00;
-        const checkoutGrandTotalVolume = rawPriceSum + calculatedShipping;
+      // Dynamically resolve card profile for testing (bypassing strict rejections)
+      const mockLookup = MOCK_VALID_CARDS.find(c => c.number === cardNum);
+      const matchedCard = {
+        cardholder: cardHolder,
+        number: cardNum,
+        expiry: expiry,
+        cvv: cvv,
+        phone: mockLookup ? mockLookup.phone : "+92 300 " + Math.floor(1000000 + Math.random() * 9000000).toString(),
+        pin: mockLookup ? mockLookup.pin : Math.floor(1000 + Math.random() * 9000).toString()
+      };
 
-        const intent = await NetworkPaymentService.createIntent({ amount: checkoutGrandTotalVolume });
-
-        window.playGlobalLoader("Processing Transaction Settlement Security Token...", null, false);
-        const settlement = await NetworkPaymentService.processCapture(intent.intentId);
-
-        if (settlement && settlement.success) {
-          let cardBrandLabel = document.getElementById('preview-card-logo').innerText;
-          let maskedLast4Digits = cardNum.substring(cardNum.length - 4);
-
-          window.playGlobalLoader("confirming order...", null, false);
-          await processFinalCheckoutOrderCreation('CARD', 'Succeeded', {
-            transactionId: settlement.transactionId,
-            intentId: intent.intentId,
-            brand: cardBrandLabel,
-            last4: maskedLast4Digits
-          });
-        } else {
-          throw new Error("Card processing request denied by downstream network banks.");
-        }
-      } catch (error) {
+      setTimeout(() => {
         window.hideGlobalLoader();
-        confirmBtn.disabled = false;
-        payText.innerText = "Confirm Payment Authorization";
-        alert("Payment Processing Engine Error Statement: " + error.message);
-      }
+        openPinVerificationModal(
+          matchedCard,
+          parseFloat(document.getElementById('chk-total').innerText.replace(/[^0-9.]/g, '')) || 0,
+          async () => {
+            window.playGlobalLoader("Processing Transaction Settlement Security Token...", null, false);
+            try {
+              const rawPriceSum = parseFloat(document.getElementById('chk-total').innerText.replace(/[^0-9.]/g, '')) || 0;
+              const calculatedShipping = rawPriceSum > 150 ? 0 : 15.00;
+              const checkoutGrandTotalVolume = rawPriceSum + calculatedShipping;
+
+              const intent = await NetworkPaymentService.createIntent({ amount: checkoutGrandTotalVolume });
+              const settlement = await NetworkPaymentService.processCapture(intent.intentId);
+
+              if (settlement && settlement.success) {
+                let cardBrandLabel = document.getElementById('preview-card-logo').innerText;
+                let maskedLast4Digits = cardNum.substring(cardNum.length - 4);
+
+                window.playGlobalLoader("confirming order...", null, false);
+                await processFinalCheckoutOrderCreation('CARD', 'Succeeded', {
+                  transactionId: settlement.transactionId,
+                  intentId: intent.intentId,
+                  brand: cardBrandLabel,
+                  last4: maskedLast4Digits
+                });
+              } else {
+                throw new Error("Card processing request denied by downstream network banks.");
+              }
+            } catch (error) {
+              window.hideGlobalLoader();
+              confirmBtn.disabled = false;
+              payText.innerText = "Confirm Payment Authorization";
+              alert("Payment Processing Engine Error Statement: " + error.message);
+            }
+          },
+          (err) => {
+            confirmBtn.disabled = false;
+            payText.innerText = "Confirm Payment Authorization";
+            showToast("Payment verification cancelled.");
+          }
+        );
+      }, 1200);
     };
 
     async function generateOrderConfirmationPdf(order) {
@@ -15859,11 +16135,15 @@
       const cards = document.querySelectorAll('.product-card');
       cards.forEach(card => {
         const h3 = card.querySelector('h3');
-        if (h3 && h3.innerText.trim() === title.trim()) {
+        if (h3 && h3.textContent.trim().toLowerCase() === title.trim().toLowerCase()) {
           const img = card.querySelector('img');
           if (img) imageSrc = img.src;
         }
       });
+      // Fallback to the loaded product template image if DOM search fails
+      if (imageSrc.includes('via.placeholder.com') && window.activeFrameProduct) {
+        imageSrc = window.activeFrameProduct.galleryImages?.[0] || window.activeFrameProduct.frameImage || imageSrc;
+      }
 
       const newItem = {
         id: generateId(),

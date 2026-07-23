@@ -873,11 +873,11 @@
               <p class="font-serif text-[15px] text-[#111111] leading-tight truncate font-normal">${window.currentUser.email || ''}</p>
             </div>
             <div class="py-1">
-              <button onclick="if(window.showUserProfilePage){window.showUserProfilePage();}else{switchView('user-profile');} document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
+              <button onclick="window.handlePathRouting('/user-profile', true); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
                 <i data-lucide="user" class="w-4 h-4 text-[#2d3748] stroke-[1.8]"></i>
                 <span>My Profile</span>
               </button>
-              <button onclick="switchView('dashboard'); switchDashboardTab('projects'); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
+              <button onclick="window.defaultDashboardTab = 'projects'; window.handlePathRouting('/dashboard', true); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
                 <i data-lucide="palette" class="w-4 h-4 text-[#2d3748] stroke-[1.8]"></i>
                 <span>My Projects</span>
               </button>
@@ -885,7 +885,7 @@
                 <i data-lucide="truck" class="w-4 h-4 text-[#2d3748] stroke-[1.8]"></i>
                 <span>Order Tracking</span>
               </button>
-              <button onclick="if(window.showUserSettingsPage){window.showUserSettingsPage();}else{switchView('user-settings');} document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
+              <button onclick="window.handlePathRouting('/user-settings', true); document.getElementById('profile-dropdown-menu').classList.add('hidden')" class="w-full flex items-center gap-3.5 px-5 py-2.5 text-[14px] font-medium text-[#111111] hover:bg-gray-50 transition-colors text-left border-none bg-transparent cursor-pointer">
                 <i data-lucide="settings" class="w-4 h-4 text-[#2d3748] stroke-[1.8]"></i>
                 <span>Settings</span>
               </button>
