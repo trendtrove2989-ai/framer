@@ -5874,7 +5874,7 @@
         <div id="scaler-wrapper" class="relative flex items-center justify-center select-none"
           style="width: 400px; height: 500px;">
           <div id="design-canvas"
-            class="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 absolute overflow-hidden select-none"
+            class="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] absolute overflow-hidden select-none"
             style="width: 400px; height: 500px; touch-action: none;">
             <div id="artwork-layer" class="absolute inset-0 w-full h-full z-10 overflow-hidden"></div>
             <canvas id="drawing-layer" class="absolute inset-0 z-20 pointer-events-none" width="400"
@@ -9216,7 +9216,7 @@
       const canvas = document.getElementById('design-canvas');
       if (!canvas) return;
 
-      // 1. Determine target canvas dimensions
+      // 1. Determine target canvas dimensions robustly without transition lag
       let canvasW, canvasH;
       if (isInit) {
         const size = config?.size || normProduct.sizes[0] || defaultFrameSizes[0];
@@ -9233,8 +9233,8 @@
           drawing.height = canvasH;
         }
       } else {
-        canvasW = canvas.offsetWidth;
-        canvasH = canvas.offsetHeight;
+        canvasW = parseFloat(canvas.style.width) || canvas.offsetWidth || 400;
+        canvasH = parseFloat(canvas.style.height) || canvas.offsetHeight || 500;
       }
 
       const outerFrameData = normProduct.outerFrame;
@@ -9314,7 +9314,30 @@
           middleElement.style.height = midFinalH + 'px';
           middleElement.style.left = midLeft + 'px';
           middleElement.style.top = midTop + 'px';
+          middleElement.dataset.type = 'image';
           middleElement.dataset.frameRole = 'middle-frame';
+          middleElement.dataset.itemName = middleFrameData.name || 'Middle Frame';
+          middleElement.dataset.frameBounds = JSON.stringify({ imgW: middle.imgW, imgH: middle.imgH, minX: middle.minX, minY: middle.minY, maxX: middle.maxX, maxY: middle.maxY });
+          middleElement.style.isolation = 'isolate';
+
+          let croppedMidSrc = null;
+          try {
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = middle.visibleW;
+            cropCanvas.height = middle.visibleH;
+            const cropCtx = cropCanvas.getContext('2d');
+            cropCtx.drawImage(middle.img, middle.minX, middle.minY, middle.visibleW, middle.visibleH, 0, 0, middle.visibleW, middle.visibleH);
+            croppedMidSrc = cropCanvas.toDataURL('image/png');
+          } catch (e) { }
+          if (croppedMidSrc) middleElement.dataset.frameCroppedSrc = croppedMidSrc;
+          if (middle.holeMinX != null && middle.holeMinY != null && middle.holeMaxX != null && middle.holeMaxY != null) {
+            const sliceLeft = Math.max(1, middle.holeMinX - middle.minX);
+            const sliceTop = Math.max(1, middle.holeMinY - middle.minY);
+            const sliceRight = Math.max(1, middle.visibleW - (middle.holeMaxX - middle.minX));
+            const sliceBottom = Math.max(1, middle.visibleH - (middle.holeMaxY - middle.minY));
+            middleElement.dataset.frameSlices = JSON.stringify({ sliceLeft, sliceTop, sliceRight, sliceBottom, srcW: middle.visibleW, srcH: middle.visibleH });
+          }
+
           middleElement.innerHTML = `<img src="${middleFrameData.image}" crossorigin="anonymous" style="width:100%; height:100%;" class="pointer-events-none block drop-shadow-lg">`;
 
           lastHoleLeft = lastHoleLeft + (middle.holeMinX - middle.minX) * midScaleX;
@@ -9339,7 +9362,30 @@
           innerElement.style.height = innerFinalH + 'px';
           innerElement.style.left = innerLeft + 'px';
           innerElement.style.top = innerTop + 'px';
+          innerElement.dataset.type = 'image';
           innerElement.dataset.frameRole = 'inner-frame';
+          innerElement.dataset.itemName = innerFrameData.name || 'Inner Frame';
+          innerElement.dataset.frameBounds = JSON.stringify({ imgW: inner.imgW, imgH: inner.imgH, minX: inner.minX, minY: inner.minY, maxX: inner.maxX, maxY: inner.maxY });
+          innerElement.style.isolation = 'isolate';
+
+          let croppedInnerSrc = null;
+          try {
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = inner.visibleW;
+            cropCanvas.height = inner.visibleH;
+            const cropCtx = cropCanvas.getContext('2d');
+            cropCtx.drawImage(inner.img, inner.minX, inner.minY, inner.visibleW, inner.visibleH, 0, 0, inner.visibleW, inner.visibleH);
+            croppedInnerSrc = cropCanvas.toDataURL('image/png');
+          } catch (e) { }
+          if (croppedInnerSrc) innerElement.dataset.frameCroppedSrc = croppedInnerSrc;
+          if (inner.holeMinX != null && inner.holeMinY != null && inner.holeMaxX != null && inner.holeMaxY != null) {
+            const sliceLeft = Math.max(1, inner.holeMinX - inner.minX);
+            const sliceTop = Math.max(1, inner.holeMinY - inner.minY);
+            const sliceRight = Math.max(1, inner.visibleW - (inner.holeMaxX - inner.minX));
+            const sliceBottom = Math.max(1, inner.visibleH - (inner.holeMaxY - inner.minY));
+            innerElement.dataset.frameSlices = JSON.stringify({ sliceLeft, sliceTop, sliceRight, sliceBottom, srcW: inner.visibleW, srcH: inner.visibleH });
+          }
+
           innerElement.innerHTML = `<img src="${innerFrameData.image}" crossorigin="anonymous" style="width:100%; height:100%;" class="pointer-events-none block drop-shadow-md">`;
 
           lastHoleLeft = lastHoleLeft + (inner.holeMinX - inner.minX) * innerScaleX;
@@ -9409,9 +9455,7 @@
         if (config?.dynamicThickness) {
           window.applyFrameThickness(config.thickness || 100, false);
         }
-        if (config?.colour) {
-          window.updateFrameColourOverlay();
-        }
+        window.updateFrameColourOverlay();
 
         window.updateCanvasScale();
         recordState();
@@ -9462,11 +9506,13 @@
       const mobileControls = document.getElementById('mobile-frame-controls');
       const frameCustomPanel = document.getElementById('frame-customization-panel');
 
+      const role = selectedItem?.dataset?.frameRole;
+
       // Only show if a frame element is selected
-      if (!selectedItem || selectedItem.dataset.frameRole !== 'frame' || !config) {
+      if (!selectedItem || (role !== 'frame' && role !== 'middle-frame' && role !== 'inner-frame') || !config) {
         if (desktopPanel) {
           desktopPanel.classList.add('hidden');
-          desktopPanel.classList.remove('md:flex'); // Removes flex override so it hides cleanly
+          desktopPanel.classList.remove('md:flex');
         }
         if (mobileControls) {
           mobileControls.classList.add('hidden');
@@ -9476,51 +9522,68 @@
         return;
       }
 
-      // Process colours: ensure current colour is first, no duplicates
-      const baseColours = config.colours?.length ? config.colours : defaultFrameColours;
-      const processedColours = [];
-      if (config.colour) {
-        processedColours.push(config.colour);
+      // Fetch colors for the selected layer
+      let layerColors = [];
+      let currentLayerColor = null;
+
+      if (role === 'frame') {
+        layerColors = window.activeFrameProduct?.outerFrame?.colors || window.activeFrameProduct?.outerFrame?.colours || config.colours || defaultFrameColours;
+        currentLayerColor = config.outerColour || config.colour;
+      } else if (role === 'middle-frame') {
+        layerColors = window.activeFrameProduct?.middleFrame?.colors || window.activeFrameProduct?.middleFrame?.colours || [];
+        currentLayerColor = config.middleColour;
+      } else if (role === 'inner-frame') {
+        layerColors = window.activeFrameProduct?.innerFrame?.colors || window.activeFrameProduct?.innerFrame?.colours || [];
+        currentLayerColor = config.innerColour;
       }
-      baseColours.forEach(c => {
+
+      const processedColours = [];
+      if (currentLayerColor) {
+        processedColours.push(currentLayerColor);
+      }
+      layerColors.forEach(c => {
         if (!processedColours.find(pc => pc.value === c.value)) {
           processedColours.push(c);
         }
       });
       const sizes = config.sizes?.length ? config.sizes : defaultFrameSizes;
 
-      // 1. Desktop Panel Sync (Squares)
+      // 1. Desktop Panel Sync
       if (desktopPanel) {
         desktopPanel.classList.remove('hidden');
         desktopPanel.classList.add('md:flex');
 
         const desktopColors = document.getElementById('desktop-frame-colors');
-        desktopColors.innerHTML = processedColours.map((c, idx) => `
-              <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded border-2 ${config.colour && config.colour.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
-          `).join('');
+        if (desktopColors) {
+          desktopColors.innerHTML = processedColours.map((c, idx) => `
+                <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
+            `).join('');
+        }
 
         const thicknessWrapper = document.getElementById('desktop-frame-thickness-wrapper');
-        if (config.dynamicThickness) {
-          thicknessWrapper.classList.remove('hidden');
-          document.getElementById('dt-thickness-slider').value = config.thickness || 100;
-          document.getElementById('dt-thickness-val').textContent = `${config.thickness || 100}%`;
-        } else {
-          thicknessWrapper.classList.add('hidden');
+        if (thicknessWrapper) {
+          if (role === 'frame' && config.dynamicThickness) {
+            thicknessWrapper.classList.remove('hidden');
+            document.getElementById('dt-thickness-slider').value = config.thickness || 100;
+            document.getElementById('dt-thickness-val').textContent = `${config.thickness || 100}%`;
+          } else {
+            thicknessWrapper.classList.add('hidden');
+          }
         }
       }
 
-      // 2. Mobile Top Bar Sync (Circles)
+      // 2. Mobile Top Bar Sync
       if (mobileControls) {
         mobileControls.classList.remove('hidden');
         mobileControls.classList.add('flex');
 
         let mobileHtml = `<div class="flex items-center gap-1.5 pl-1">`;
         mobileHtml += processedColours.map((c, idx) => `
-              <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-5 h-5 rounded-full border-2 ${config.colour && config.colour.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand'} shrink-0 transition-transform" style="background-color: ${c.value};"></button>
+              <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-5 h-5 rounded-full border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand'} shrink-0 transition-transform" style="background-color: ${c.value};"></button>
           `).join('');
         mobileHtml += `</div>`;
 
-        if (config.dynamicThickness) {
+        if (role === 'frame' && config.dynamicThickness) {
           mobileHtml += `
                  <div class="h-4 w-px bg-sand mx-1 shrink-0"></div>
                  <i data-lucide="move-horizontal" class="w-3 h-3 text-slate shrink-0"></i>
@@ -9531,30 +9594,35 @@
         lucide.createIcons();
       }
 
-      // 3. Frame Customization Panel (in cat-frames)
+      // 3. Frame Customization Panel
       if (frameCustomPanel) {
         frameCustomPanel.classList.remove('hidden');
 
-        // Frame sizes
+        // Size control (only relevant to global product template, but visible for Outer frame)
         const frameSizeOptions = document.getElementById('frame-size-options');
         if (frameSizeOptions) {
-          frameSizeOptions.innerHTML = sizes.map((s, idx) => `
-                  <button onclick="selectFrameSize(${idx})" class="px-3 py-1.5 rounded-lg border-2 text-xs font-bold ${config.size && config.size.width === s.width && config.size.height === s.height ? 'border-flame bg-flame/10 text-flame' : 'border-sand/50 bg-white text-slate'} hover:border-flame transition">${s.name || `${s.width} × ${s.height}`}</button>
-              `).join('');
+          if (role === 'frame') {
+            frameSizeOptions.parentElement.classList.remove('hidden');
+            frameSizeOptions.innerHTML = sizes.map((s, idx) => `
+                    <button onclick="selectFrameSize(${idx})" class="px-3 py-1.5 rounded-lg border-2 text-xs font-bold ${config.size && config.size.width === s.width && config.size.height === s.height ? 'border-flame bg-flame/10 text-flame' : 'border-sand/50 bg-white text-slate'} hover:border-flame transition">${s.name || `${s.width} × ${s.height}`}</button>
+                `).join('');
+          } else {
+            frameSizeOptions.parentElement.classList.add('hidden');
+          }
         }
 
         // Frame colours
         const frameColourOptions = document.getElementById('frame-colour-options');
         if (frameColourOptions) {
           frameColourOptions.innerHTML = processedColours.map((c, idx) => `
-                  <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded-full border-2 ${config.colour && config.colour.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
+                  <button onclick="selectFrameColourByValue('${c.value}')" title="${c.name}" class="w-8 h-8 rounded-full border-2 ${currentLayerColor && currentLayerColor.value === c.value ? 'border-flame shadow-md scale-110' : 'border-sand/50'} hover:scale-105 transition-all" style="background-color: ${c.value};"></button>
               `).join('');
         }
 
-        // Thickness control
+        // Thickness control (Outer frame only)
         const thicknessControl = document.getElementById('frame-thickness-control');
         if (thicknessControl) {
-          if (config.dynamicThickness) {
+          if (role === 'frame' && config.dynamicThickness) {
             thicknessControl.classList.remove('hidden');
             document.getElementById('frame-thickness-value').textContent = `${config.thickness || 100}%`;
             document.getElementById('frame-thickness-slider').value = config.thickness || 100;
@@ -9565,34 +9633,55 @@
       }
     };
 
-    // Helper function to select color by value instead of index
     window.selectFrameColourByValue = (value) => {
       const config = window.activeFrameConfiguration;
       if (!config) return;
-      const baseColours = config.colours?.length ? config.colours : defaultFrameColours;
-      const colour = baseColours.find(c => c.value === value);
+
+      const role = selectedItem?.dataset?.frameRole;
+      let layerColors = [];
+
+      if (role === 'frame') {
+        layerColors = window.activeFrameProduct?.outerFrame?.colors || window.activeFrameProduct?.outerFrame?.colours || config.colours || defaultFrameColours;
+      } else if (role === 'middle-frame') {
+        layerColors = window.activeFrameProduct?.middleFrame?.colors || window.activeFrameProduct?.middleFrame?.colours || [];
+      } else if (role === 'inner-frame') {
+        layerColors = window.activeFrameProduct?.innerFrame?.colors || window.activeFrameProduct?.innerFrame?.colours || [];
+      }
+
+      const colour = layerColors.find(c => c.value === value);
       if (colour) {
-        config.colour = colour;
+        if (role === 'frame') {
+          config.outerColour = colour;
+          config.colour = colour;
+        } else if (role === 'middle-frame') {
+          config.middleColour = colour;
+        } else if (role === 'inner-frame') {
+          config.innerColour = colour;
+        }
         window.syncFrameCustomizationPanels();
         window.updateFrameColourOverlay();
         recordState();
       }
     };
 
-    window.updateFrameColourOverlay = () => {
-      const config = window.activeFrameConfiguration;
-      const frame = document.querySelector('#artwork-layer [data-frame-role="frame"]');
-      if (!config || !frame || !config.colour) return;
-      const bounds = JSON.parse(frame.dataset.frameBounds || '{}');
-      const slices = JSON.parse(frame.dataset.frameSlices || 'null');
-      if (!slices || !bounds || !bounds.imgW || !bounds.imgH) {
-        const existing = frame.querySelector('.frame-colour-overlay');
+    window.updateSingleFrameColourOverlay = (frameEl, colourConfig, thicknessConfig = 100) => {
+      if (!frameEl) return;
+      if (!colourConfig) {
+        const existing = frameEl.querySelector('.frame-colour-overlay');
         if (existing) existing.remove();
         return;
       }
-      frame.style.isolation = 'isolate';
 
-      let overlay = frame.querySelector('.frame-colour-overlay');
+      const bounds = JSON.parse(frameEl.dataset.frameBounds || '{}');
+      const slices = JSON.parse(frameEl.dataset.frameSlices || 'null');
+      if (!slices || !bounds || !bounds.imgW || !bounds.imgH) {
+        const existing = frameEl.querySelector('.frame-colour-overlay');
+        if (existing) existing.remove();
+        return;
+      }
+      frameEl.style.isolation = 'isolate';
+
+      let overlay = frameEl.querySelector('.frame-colour-overlay');
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.className = 'frame-colour-overlay pointer-events-none absolute';
@@ -9602,11 +9691,11 @@
         overlay.style.mixBlendMode = 'color';
         overlay.style.opacity = '.72';
         overlay.style.zIndex = '5';
-        frame.appendChild(overlay);
+        frameEl.appendChild(overlay);
       }
 
-      const sx = frame.offsetWidth / bounds.imgW;
-      const sy = frame.offsetHeight / bounds.imgH;
+      const sx = frameEl.offsetWidth / bounds.imgW;
+      const sy = frameEl.offsetHeight / bounds.imgH;
       const visibleW = (bounds.maxX - bounds.minX) || bounds.imgW;
       const visibleH = (bounds.maxY - bounds.minY) || bounds.imgH;
       const visLeft = (bounds.minX || 0) * sx;
@@ -9618,11 +9707,11 @@
       overlay.style.top = `${visTop}px`;
       overlay.style.width = `${visW}px`;
       overlay.style.height = `${visH}px`;
-      overlay.style.borderColor = config.colour.value;
+      overlay.style.borderColor = colourConfig.value;
 
       const scaleX = visW / (slices.srcW || visibleW || 1);
       const scaleY = visH / (slices.srcH || visibleH || 1);
-      const mult = Number(config.thickness || 100) / 100;
+      const mult = Number(thicknessConfig) / 100;
       const maxXInset = Math.max(1, (visW / 2) - 1);
       const maxYInset = Math.max(1, (visH / 2) - 1);
 
@@ -9637,6 +9726,20 @@
       overlay.style.borderBottomWidth = `${bottomPx}px`;
     };
 
+    window.updateFrameColourOverlay = () => {
+      const config = window.activeFrameConfiguration;
+      if (!config) return;
+
+      const outerFrame = document.querySelector('#artwork-layer [data-frame-role="frame"]');
+      window.updateSingleFrameColourOverlay(outerFrame, config.outerColour || config.colour, config.thickness || 100);
+
+      const middleFrame = document.querySelector('#artwork-layer [data-frame-role="middle-frame"]');
+      window.updateSingleFrameColourOverlay(middleFrame, config.middleColour, 100);
+
+      const innerFrame = document.querySelector('#artwork-layer [data-frame-role="inner-frame"]');
+      window.updateSingleFrameColourOverlay(innerFrame, config.innerColour, 100);
+    };
+
     window.renderFrameCustomizationPanel = () => {
       window.syncFrameCustomizationPanels();
     };
@@ -9649,10 +9752,42 @@
 
     window.selectFrameColour = (index) => {
       const config = window.activeFrameConfiguration; if (!config) return;
-      config.colour = (config.colours?.length ? config.colours : defaultFrameColours)[index];
-      window.syncFrameCustomizationPanels();
-      window.updateFrameColourOverlay();
-      recordState();
+
+      const role = selectedItem?.dataset?.frameRole;
+      let layerColors = [];
+      if (role === 'frame') {
+        layerColors = window.activeFrameProduct?.outerFrame?.colors || window.activeFrameProduct?.outerFrame?.colours || config.colours || defaultFrameColours;
+      } else if (role === 'middle-frame') {
+        layerColors = window.activeFrameProduct?.middleFrame?.colors || window.activeFrameProduct?.middleFrame?.colours || [];
+      } else if (role === 'inner-frame') {
+        layerColors = window.activeFrameProduct?.innerFrame?.colors || window.activeFrameProduct?.innerFrame?.colours || [];
+      }
+
+      const processedColours = [];
+      const currentLayerColor = role === 'frame' ? (config.outerColour || config.colour) : (role === 'middle-frame' ? config.middleColour : config.innerColour);
+      if (currentLayerColor) {
+        processedColours.push(currentLayerColor);
+      }
+      layerColors.forEach(c => {
+        if (!processedColours.find(pc => pc.value === c.value)) {
+          processedColours.push(c);
+        }
+      });
+
+      const selectedColor = processedColours[index];
+      if (selectedColor) {
+        if (role === 'frame') {
+          config.outerColour = selectedColor;
+          config.colour = selectedColor;
+        } else if (role === 'middle-frame') {
+          config.middleColour = selectedColor;
+        } else if (role === 'inner-frame') {
+          config.innerColour = selectedColor;
+        }
+        window.syncFrameCustomizationPanels();
+        window.updateFrameColourOverlay();
+        recordState();
+      }
     };
 
     window.applyFrameThickness = (value, shouldRecord = true) => {
