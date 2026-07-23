@@ -13067,6 +13067,37 @@
       }
     }
 
+    // Handle the return from Google's full-page login seamlessly
+    firebase.auth().getRedirectResult().then(async (result) => {
+      if (result && result.user) {
+        const user = result.user;
+
+        // Check if user already exists in Firestore database
+        const userDoc = await db.collection('users').doc(user.uid).get();
+
+        if (!userDoc.exists) {
+          // Auto-Signup logic without email verification
+          await db.collection('users').doc(user.uid).set({
+            email: user.email,
+            name: user.displayName || "Google User",
+            role: 'user',
+            isBlocked: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          showToast("Google account registered & logged in successfully!");
+        } else {
+          showToast("Logged in with Google successfully!");
+        }
+
+        // Clear modals and grant access
+        document.getElementById('login-modal')?.classList.add('hidden');
+        document.getElementById('signup-modal')?.classList.add('hidden');
+      }
+    }).catch((error) => {
+      console.error(error);
+      showToast("Google Auth failed: " + error.message);
+    });
+
     // Handle the return from Google's full-page login
     firebase.auth().getRedirectResult().then((result) => {
       if (result.credential) {
